@@ -15,86 +15,79 @@ import Channeldialogue from "./channeldialogue";
 import { useRouter } from "next/router";
 import { useUser } from "@/lib/AuthContext";
 
-const Header = () => {
+const Header = ({
+  onMenuClick,
+}: {
+  onMenuClick: () => void;
+}) => {
   const { user, logout, handlegooglesignin, signingIn } = useUser();
-  // const user: any = {
-  //   id: "1",
-  //   name: "John Doe",
-  //   email: "john@example.com",
-  //   image: "https://github.com/shadcn.png?height=32&width=32",
-  // };
   const [searchQuery, setSearchQuery] = useState("");
   const [isdialogeopen, setisdialogeopen] = useState(false);
   const router = useRouter();
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
-  const handleKeypress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch(e as any);
-    }
-  };
+
   return (
-    <header className="flex items-center justify-between px-4 py-2 bg-white border-b">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon">
-          <Menu className="w-6 h-6" />
+    <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-2 bg-white border-b h-14">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={onMenuClick} className="shrink-0">
+          <Menu className="w-5 h-5" />
         </Button>
-        <Link href="/" className="flex items-center gap-1">
+        <Link href="/" className="flex items-center gap-1 shrink-0">
           <div className="bg-red-600 p-1 rounded">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
               <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
             </svg>
           </div>
-          <span className="text-xl font-medium">YourTube</span>
-          <span className="text-xs text-gray-400 ml-1">IN</span>
+          <span className="text-lg font-medium hidden sm:inline">YourTube</span>
+          <span className="text-[10px] text-gray-400 ml-0.5 hidden sm:inline">IN</span>
         </Link>
       </div>
+
       <form
         onSubmit={handleSearch}
-        className="flex items-center gap-2 flex-1 max-w-2xl mx-4"
+        className="flex items-center flex-1 max-w-2xl mx-2 sm:mx-4"
       >
         <div className="flex flex-1">
           <Input
             type="search"
             placeholder="Search"
             value={searchQuery}
-            onKeyPress={handleKeypress}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="rounded-l-full border-r-0 focus-visible:ring-0"
+            className="rounded-l-full border-r-0 focus-visible:ring-0 h-9 text-sm"
           />
           <Button
             type="submit"
-            className="rounded-r-full px-6 bg-gray-50 hover:bg-gray-100 text-gray-600 border border-l-0"
+            className="rounded-r-full px-4 sm:px-6 bg-gray-50 hover:bg-gray-100 text-gray-600 border border-l-0 h-9"
           >
-            <Search className="w-5 h-5" />
+            <Search className="w-4 h-4" />
           </Button>
         </div>
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Mic className="w-5 h-5" />
+        <Button variant="ghost" size="icon" className="rounded-full ml-2 shrink-0 hidden sm:flex">
+          <Mic className="w-4 h-4" />
         </Button>
       </form>
-      <div className="flex items-center gap-2">
+
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         {user ? (
           <>
-            <Button variant="ghost" size="icon">
-              <VideoIcon className="w-6 h-6" />
+            <Button variant="ghost" size="icon" className="hidden sm:flex">
+              <VideoIcon className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon">
-              <Bell className="w-6 h-6" />
+            <Button variant="ghost" size="icon" className="hidden sm:flex">
+              <Bell className="w-5 h-5" />
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-8 w-8 rounded-full"
-                >
-                  <Avatar className="h-8 w-8">
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
+                  <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
                     <AvatarImage src={user.image} />
-                    <AvatarFallback>{user.name?.[0] || "U"}</AvatarFallback>
+                    <AvatarFallback className="text-xs">{user.name?.[0] || "U"}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -130,18 +123,17 @@ const Header = () => {
             </DropdownMenu>
           </>
         ) : (
-          <>
-            <Button
-              className="flex items-center gap-2"
-              onClick={handlegooglesignin}
-              disabled={signingIn}
-            >
-              <User className="w-4 h-4" />
-              Sign in
-            </Button>
-          </>
-        )}{" "}
+          <Button
+            className="flex items-center gap-2 text-sm h-9"
+            onClick={handlegooglesignin}
+            disabled={signingIn}
+          >
+            <User className="w-4 h-4" />
+            <span className="hidden sm:inline">Sign in</span>
+          </Button>
+        )}
       </div>
+
       <Channeldialogue
         isopen={isdialogeopen}
         onclose={() => setisdialogeopen(false)}

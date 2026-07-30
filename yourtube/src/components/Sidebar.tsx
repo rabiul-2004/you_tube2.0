@@ -1,94 +1,154 @@
-import {
-  Home,
-  Compass,
-  PlaySquare,
-  Clock,
-  ThumbsUp,
-  History,
-  User,
-} from "lucide-react";
-import Link from "next/link";
+"use client";
 import React, { useState } from "react";
-import { Button } from "./ui/button";
-import Channeldialogue from "./channeldialogue";
-import { useUser } from "@/lib/AuthContext";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { Home, Compass, Clock, ThumbsUp, PlaySquare, Clock4, Library, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const Sidebar = () => {
-  const { user } = useUser();
+const menuItems = [
+  { icon: Home, label: "Home", href: "/" },
+  { icon: Compass, label: "Explore", href: "/" },
+  { icon: PlaySquare, label: "Shorts", href: "/" },
+];
 
-  const [isdialogeopen, setisdialogeopen] = useState(false);
-  return (
-    <aside className="w-64 bg-white  border-r min-h-screen p-2">
-      <nav className="space-y-1">
-        <Link href="/">
-          <Button variant="ghost" className="w-full justify-start">
-            <Home className="w-5 h-5 mr-3" />
-            Home
-          </Button>
-        </Link>
-        <Link href="/explore">
-          <Button variant="ghost" className="w-full justify-start">
-            <Compass className="w-5 h-5 mr-3" />
-            Explore
-          </Button>
-        </Link>
-        <Link href="/subscriptions">
-          <Button variant="ghost" className="w-full justify-start">
-            <PlaySquare className="w-5 h-5 mr-3" />
-            Subscriptions
-          </Button>
-        </Link>
+const youItems = [
+  { icon: Library, label: "Library", href: "/" },
+  { icon: Clock, label: "History", href: "/history" },
+  { icon: ThumbsUp, label: "Liked videos", href: "/liked" },
+  { icon: Clock4, label: "Watch later", href: "/watch-later" },
+];
 
-        {user && (
-          <>
-            <div className="border-t pt-2 mt-2">
-              <Link href="/history">
-                <Button variant="ghost" className="w-full justify-start">
-                  <History className="w-5 h-5 mr-3" />
-                  History
-                </Button>
-              </Link>
-              <Link href="/liked">
-                <Button variant="ghost" className="w-full justify-start">
-                  <ThumbsUp className="w-5 h-5 mr-3" />
-                  Liked videos
-                </Button>
-              </Link>
-              <Link href="/watch-later">
-                <Button variant="ghost" className="w-full justify-start">
-                  <Clock className="w-5 h-5 mr-3" />
-                  Watch later
-                </Button>
-              </Link>
-              {user?.channelname ? (
-                <Link href={`/channel/${user.id}`}>
-                  <Button variant="ghost" className="w-full justify-start">
-                    <User className="w-5 h-5 mr-3" />
-                    Your channel
-                  </Button>
-                </Link>
-              ) : (
-                <div className="px-2 py-1.5">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setisdialogeopen(true)}
-                  >
-                    Create Channel
-                  </Button>
-                </div>
-              )}
-            </div>
-          </>
+const Sidebar = ({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) => {
+  const router = useRouter();
+  const [showMore, setShowMore] = useState(false);
+
+  const content = (
+    <div className="h-full overflow-y-auto scrollbar-hide">
+      <div className="p-2">
+        {menuItems.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            onClick={onClose}
+            className={cn(
+              "flex items-center gap-5 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+              router.pathname === item.href
+                ? "bg-gray-100 font-medium"
+                : "hover:bg-gray-100"
+            )}
+          >
+            <item.icon className="w-5 h-5 flex-shrink-0" />
+            <span className="text-sm">{item.label}</span>
+          </Link>
+        ))}
+      </div>
+
+      <div className="border-t mx-2 my-2" />
+
+      <div className="p-2">
+        <div className="flex items-center gap-5 px-3 py-2.5 text-sm font-medium">
+          <span>You</span>
+        </div>
+        {youItems.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            onClick={onClose}
+            className="flex items-center gap-5 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-gray-100"
+          >
+            <item.icon className="w-5 h-5 flex-shrink-0" />
+            <span className="text-sm">{item.label}</span>
+          </Link>
+        ))}
+        {showMore && (
+          <div className="animate-fade-up">
+            <Link
+              href="/"
+              onClick={onClose}
+              className="flex items-center gap-5 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-gray-100"
+            >
+              <PlaySquare className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">Your videos</span>
+            </Link>
+          </div>
         )}
-      </nav>
-      <Channeldialogue
-        isopen={isdialogeopen}
-        onclose={() => setisdialogeopen(false)}
-        mode="create"
-      />
-    </aside>
+        <button
+          onClick={() => setShowMore(!showMore)}
+          className="flex items-center gap-5 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-gray-100 w-full"
+        >
+          <ChevronDown
+            className={cn(
+              "w-5 h-5 flex-shrink-0 transition-transform duration-200",
+              showMore && "rotate-180"
+            )}
+          />
+          <span className="text-sm">{showMore ? "Show less" : "Show more"}</span>
+        </button>
+      </div>
+
+      <div className="border-t mx-2 my-2" />
+
+      <div className="p-2">
+        <div className="flex items-center gap-5 px-3 py-2.5 text-sm font-medium">
+          <span>Explore</span>
+        </div>
+        {["Trending", "Music", "Gaming", "News", "Sports", "Education"].map(
+          (item) => (
+            <Link
+              key={item}
+              href="/"
+              onClick={onClose}
+              className="flex items-center gap-5 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-gray-100"
+            >
+              <span className="text-sm">{item}</span>
+            </Link>
+          )
+        )}
+      </div>
+
+      <div className="p-4 text-xs text-gray-500 space-y-1">
+        <p>About Press Copyright</p>
+        <p>Contact us Creators Advertise</p>
+        <p>Developers</p>
+        <p className="pt-2">© 2026 YourTube Clone</p>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside
+        className={cn(
+          "hidden md:block w-60 flex-shrink-0 border-r bg-white h-[calc(100vh-57px)] sticky top-[57px] overflow-hidden transition-all duration-300",
+          !isOpen && "md:hidden"
+        )}
+      >
+        {content}
+      </aside>
+
+      {/* Mobile drawer overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-50 md:hidden"
+          onClick={onClose}
+        >
+          <div className="absolute inset-0 bg-black/50 animate-fade-in" />
+          <aside
+            className="relative w-72 h-full bg-white shadow-xl animate-slide-left overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {content}
+          </aside>
+        </div>
+      )}
+    </>
   );
 };
 

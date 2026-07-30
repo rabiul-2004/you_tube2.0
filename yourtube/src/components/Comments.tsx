@@ -5,6 +5,8 @@ import { Button } from "./ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
+import { MessageSquare } from "lucide-react";
+
 interface Comment {
   _id: string;
   videoid: string;
@@ -13,6 +15,7 @@ interface Comment {
   usercommented: string;
   commentedon: string;
 }
+
 const Comments = ({ videoId }: any) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -21,24 +24,7 @@ const Comments = ({ videoId }: any) => {
   const [editText, setEditText] = useState("");
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
-  const fetchedComments = [
-    {
-      _id: "1",
-      videoid: videoId,
-      userid: "1",
-      commentbody: "Great video! Really enjoyed watching this.",
-      usercommented: "John Doe",
-      commentedon: new Date(Date.now() - 3600000).toISOString(),
-    },
-    {
-      _id: "2",
-      videoid: videoId,
-      userid: "2",
-      commentbody: "Thanks for sharing this amazing content!",
-      usercommented: "Jane Smith",
-      commentedon: new Date(Date.now() - 7200000).toISOString(),
-    },
-  ];
+
   useEffect(() => {
     loadComments();
   }, [videoId]);
@@ -53,12 +39,9 @@ const Comments = ({ videoId }: any) => {
       setLoading(false);
     }
   };
-  if (loading) {
-    return <div>Loading history...</div>;
-  }
+
   const handleSubmitComment = async () => {
     if (!user || !newComment.trim()) return;
-
     setIsSubmitting(true);
     try {
       const res = await axiosInstance.post("/comment/postcomment", {
@@ -94,10 +77,9 @@ const Comments = ({ videoId }: any) => {
   const handleUpdateComment = async () => {
     if (!editText.trim()) return;
     try {
-      const res = await axiosInstance.post(
-        `/comment/editcomment/${editingCommentId}`,
-        { commentbody: editText }
-      );
+      const res = await axiosInstance.post(`/comment/editcomment/${editingCommentId}`, {
+        commentbody: editText,
+      });
       if (res.data) {
         setComments((prev) =>
           prev.map((c) =>
@@ -122,13 +104,31 @@ const Comments = ({ videoId }: any) => {
       console.log(error);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-4 animate-fade-up">
+        <div className="h-6 w-32 bg-gray-200 rounded animate-skeleton" />
+        <div className="flex gap-4">
+          <div className="w-10 h-10 rounded-full bg-gray-200 animate-skeleton" />
+          <div className="flex-1 space-y-2">
+            <div className="h-20 bg-gray-200 rounded animate-skeleton" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold">{comments.length} Comments</h2>
+    <div className="space-y-6 animate-fade-up">
+      <h2 className="text-xl font-semibold flex items-center gap-2">
+        <MessageSquare className="w-5 h-5" />
+        {comments.length} Comments
+      </h2>
 
       {user && (
         <div className="flex gap-4">
-          <Avatar className="w-10 h-10">
+          <Avatar className="w-10 h-10 flex-shrink-0">
             <AvatarImage src={user.image || ""} />
             <AvatarFallback>{user.name?.[0] || "U"}</AvatarFallback>
           </Avatar>
@@ -137,44 +137,48 @@ const Comments = ({ videoId }: any) => {
               placeholder="Add a comment..."
               value={newComment}
               onChange={(e: any) => setNewComment(e.target.value)}
-              className="min-h-[80px] resize-none border-0 border-b-2 rounded-none focus-visible:ring-0"
+              className="min-h-[60px] resize-none border-0 border-b-2 rounded-none focus-visible:ring-0 text-sm"
             />
             <div className="flex gap-2 justify-end">
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={() => setNewComment("")}
                 disabled={!newComment.trim()}
               >
                 Cancel
               </Button>
               <Button
+                size="sm"
                 onClick={handleSubmitComment}
                 disabled={!newComment.trim() || isSubmitting}
               >
-                Comment
+                {isSubmitting ? "Posting..." : "Comment"}
               </Button>
             </div>
           </div>
         </div>
       )}
-      <div className="space-y-4">
+
+      <div className="space-y-5">
         {comments.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">
+          <p className="text-sm text-gray-500 italic text-center py-8">
             No comments yet. Be the first to comment!
           </p>
         ) : (
           comments.map((comment) => (
-            <div key={comment._id} className="flex gap-4">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                <AvatarFallback>{comment.usercommented[0]}</AvatarFallback>
+            <div key={comment._id} className="flex gap-4 animate-fade-up">
+              <Avatar className="w-10 h-10 flex-shrink-0">
+                <AvatarFallback className="text-sm">
+                  {comment.usercommented?.[0] || "?"}
+                </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-medium text-sm">
                     {comment.usercommented}
                   </span>
-                  <span className="text-xs text-gray-600">
+                  <span className="text-xs text-gray-500">
                     {formatDistanceToNow(new Date(comment.commentedon))} ago
                   </span>
                 </div>
@@ -184,34 +188,32 @@ const Comments = ({ videoId }: any) => {
                     <Textarea
                       value={editText}
                       onChange={(e) => setEditText(e.target.value)}
+                      className="text-sm min-h-[60px]"
                     />
                     <div className="flex gap-2 justify-end">
-                      <Button
-                        onClick={handleUpdateComment}
-                        disabled={!editText.trim()}
-                      >
+                      <Button size="sm" onClick={handleUpdateComment} disabled={!editText.trim()}>
                         Save
                       </Button>
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingCommentId(null);
-                          setEditText("");
-                        }}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => { setEditingCommentId(null); setEditText(""); }}>
                         Cancel
                       </Button>
                     </div>
                   </div>
                 ) : (
                   <>
-                    <p className="text-sm">{comment.commentbody}</p>
+                    <p className="text-sm text-gray-800">{comment.commentbody}</p>
                     {comment.userid === user?._id && (
-                      <div className="flex gap-2 mt-2 text-sm text-gray-500">
-                        <button onClick={() => handleEdit(comment)}>
+                      <div className="flex gap-3 mt-1.5 text-xs text-gray-500">
+                        <button
+                          className="hover:text-black transition-colors font-medium"
+                          onClick={() => handleEdit(comment)}
+                        >
                           Edit
                         </button>
-                        <button onClick={() => handleDelete(comment._id)}>
+                        <button
+                          className="hover:text-red-600 transition-colors font-medium"
+                          onClick={() => handleDelete(comment._id)}
+                        >
                           Delete
                         </button>
                       </div>

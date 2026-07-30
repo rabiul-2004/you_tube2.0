@@ -3,23 +3,51 @@ import RelatedVideos from "@/components/RelatedVideos";
 import VideoInfo from "@/components/VideoInfo";
 import Videopplayer from "@/components/Videopplayer";
 import axiosInstance from "@/lib/axiosinstance";
-import { notFound } from "next/navigation";
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-const index = () => {
+function WatchSkeleton() {
+  return (
+    <div className="max-w-7xl mx-auto p-4 animate-fade-up">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="aspect-video bg-gray-200 rounded-xl animate-skeleton" />
+          <div className="space-y-3">
+            <div className="h-6 bg-gray-200 rounded animate-skeleton w-3/4" />
+            <div className="h-4 bg-gray-200 rounded animate-skeleton w-1/2" />
+            <div className="h-20 bg-gray-200 rounded animate-skeleton" />
+          </div>
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex gap-2">
+              <div className="w-40 aspect-video bg-gray-200 rounded-lg animate-skeleton" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-200 rounded animate-skeleton" />
+                <div className="h-3 bg-gray-200 rounded animate-skeleton w-3/4" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const WatchPage = () => {
   const router = useRouter();
   const { id } = router.query;
   const [videos, setvideo] = useState<any>(null);
   const [video, setvide] = useState<any>(null);
   const [loading, setloading] = useState(true);
+
   useEffect(() => {
     const fetchvideo = async () => {
       if (!id || typeof id !== "string") return;
       try {
         const res = await axiosInstance.get("/video/getall");
         const video = res.data?.filter((vid: any) => vid._id === id);
-        setvideo(video[0]);
+        setvideo(video?.[0]);
         setvide(res.data);
       } catch (error) {
         console.log(error);
@@ -29,43 +57,21 @@ const index = () => {
     };
     fetchvideo();
   }, [id]);
-  // const relatedVideos = [
-  //   {
-  //     _id: "1",
-  //     videotitle: "Amazing Nature Documentary",
-  //     filename: "nature-doc.mp4",
-  //     filetype: "video/mp4",
-  //     filepath: "/videos/nature-doc.mp4",
-  //     filesize: "500MB",
-  //     videochanel: "Nature Channel",
-  //     Like: 1250,
-  //     Dislike: 50,
-  //     views: 45000,
-  //     uploader: "nature_lover",
-  //     createdAt: new Date().toISOString(),
-  //   },
-  //   {
-  //     _id: "2",
-  //     videotitle: "Cooking Tutorial: Perfect Pasta",
-  //     filename: "pasta-tutorial.mp4",
-  //     filetype: "video/mp4",
-  //     filepath: "/videos/pasta-tutorial.mp4",
-  //     filesize: "300MB",
-  //     videochanel: "Chef's Kitchen",
-  //     Like: 890,
-  //     Dislike: 20,
-  //     views: 23000,
-  //     uploader: "chef_master",
-  //     createdAt: new Date(Date.now() - 86400000).toISOString(),
-  //   },
-  // ];
-  if (loading) {
-    return <div>Loading..</div>;
-  }
-  
+
+  if (loading) return <WatchSkeleton />;
+
   if (!videos) {
-    return <div>Video not found</div>;
+    return (
+      <div className="max-w-7xl mx-auto p-4">
+        <div className="text-center py-16 animate-fade-up">
+          <div className="text-6xl mb-4">🎥</div>
+          <h2 className="text-xl font-semibold text-gray-600">Video not found</h2>
+          <p className="text-sm text-gray-500 mt-1">This video may have been removed or is unavailable.</p>
+        </div>
+      </div>
+    );
   }
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto p-4">
@@ -76,7 +82,7 @@ const index = () => {
             <Comments videoId={id} />
           </div>
           <div className="space-y-4">
-            <RelatedVideos videos={video} />
+            <RelatedVideos videos={video || []} />
           </div>
         </div>
       </div>
@@ -84,4 +90,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default WatchPage;

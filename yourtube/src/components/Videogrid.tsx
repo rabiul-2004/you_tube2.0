@@ -2,14 +2,31 @@ import React, { useEffect, useState } from "react";
 import Videocard from "./videocard";
 import axiosInstance from "@/lib/axiosinstance";
 
+function SkeletonCard({ index }: { index: number }) {
+  return (
+    <div className={`space-y-3 animate-fade-up stagger-${Math.min(index + 1, 8)}`}>
+      <div className="aspect-video rounded-xl bg-gray-200 animate-skeleton" />
+      <div className="flex gap-3">
+        <div className="w-9 h-9 rounded-full bg-gray-200 animate-skeleton flex-shrink-0" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-gray-200 rounded animate-skeleton w-full" />
+          <div className="h-3 bg-gray-200 rounded animate-skeleton w-3/4" />
+          <div className="h-3 bg-gray-200 rounded animate-skeleton w-1/2" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const Videogrid = () => {
   const [videos, setvideo] = useState<any[]>([]);
   const [loading, setloading] = useState(true);
+
   useEffect(() => {
     const fetchvideo = async () => {
       try {
         const res = await axiosInstance.get("/video/getall");
-        setvideo(res.data);
+        setvideo(res.data || []);
       } catch (error) {
         console.log(error);
       } finally {
@@ -19,42 +36,30 @@ const Videogrid = () => {
     fetchvideo();
   }, []);
 
-  // const videos = [
-  //   {
-  //     _id: "1",
-  //     videotitle: "Amazing Nature Documentary",
-  //     filename: "nature-doc.mp4",
-  //     filetype: "video/mp4",
-  //     filepath: "/videos/nature-doc.mp4",
-  //     filesize: "500MB",
-  //     videochanel: "Nature Channel",
-  //     Like: 1250,
-  //     views: 45000,
-  //     uploader: "nature_lover",
-  //     createdAt: new Date().toISOString(),
-  //   },
-  //   {
-  //     _id: "2",
-  //     videotitle: "Cooking Tutorial: Perfect Pasta",
-  //     filename: "pasta-tutorial.mp4",
-  //     filetype: "video/mp4",
-  //     filepath: "/videos/pasta-tutorial.mp4",
-  //     filesize: "300MB",
-  //     videochanel: "Chef's Kitchen",
-  //     Like: 890,
-  //     views: 23000,
-  //     uploader: "chef_master",
-  //     createdAt: new Date(Date.now() - 86400000).toISOString(),
-  //   },
-  // ];
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <SkeletonCard key={i} index={i} />
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {loading ? (
-        <>Loading..</>
-      ) : videos && videos.length > 0 ? (
-        videos.map((video: any) => <Videocard key={video._id} video={video} />)
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {videos.length > 0 ? (
+        videos.map((video: any, i: number) => (
+          <div key={video._id} className={`animate-fade-up stagger-${Math.min((i % 8) + 1, 8)}`}>
+            <Videocard video={video} />
+          </div>
+        ))
       ) : (
-        <>No videos found</>
+        <div className="col-span-full text-center py-16">
+          <div className="text-6xl mb-4">🎬</div>
+          <h3 className="text-lg font-medium text-gray-600">No videos yet</h3>
+          <p className="text-sm text-gray-500 mt-1">Upload a video to get started</p>
+        </div>
       )}
     </div>
   );

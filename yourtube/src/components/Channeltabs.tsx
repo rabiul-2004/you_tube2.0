@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/button";
+
 const tabs = [
   { id: "home", label: "Home" },
   { id: "videos", label: "Videos" },
@@ -8,17 +9,22 @@ const tabs = [
   { id: "community", label: "Community" },
   { id: "about", label: "About" },
 ];
+
 const Channeltabs = () => {
   const [activeTab, setActiveTab] = useState("videos");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className="border-b px-4">
-      <div className="flex gap-8 overflow-x-auto">
+    <div className="border-b px-4 sm:px-6" ref={scrollRef}>
+      <div className="flex gap-6 sm:gap-8 overflow-x-auto scrollbar-hide">
         {tabs.map((tab) => (
           <Button
             key={tab.id}
             variant="ghost"
-            className={`px-0 py-4 border-b-2 rounded-none ${
-              activeTab === tab.id ? "border-black text-black" : "border-transparent text-gray-600 hover:text-black"
+            className={`px-0 py-3 sm:py-4 border-b-2 rounded-none shrink-0 transition-all duration-200 text-sm ${
+              activeTab === tab.id
+                ? "border-black text-black font-medium"
+                : "border-transparent text-gray-600 hover:text-black"
             }`}
             onClick={() => setActiveTab(tab.id)}
           >
