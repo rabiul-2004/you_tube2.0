@@ -44,6 +44,9 @@ const WatchPage = () => {
   useEffect(() => {
     const fetchvideo = async () => {
       if (!id || typeof id !== "string") return;
+      setloading(true);
+      setvideo(null);
+      setvide(null);
       try {
         const res = await axiosInstance.get("/video/getall");
         const video = res.data?.filter((vid: any) => vid._id === id);
