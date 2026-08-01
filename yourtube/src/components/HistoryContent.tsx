@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { MoreVertical, X, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,15 +21,16 @@ export default function HistoryContent() {
 
   useEffect(() => {
     if (user) {
+      setLoading(true);
       loadHistory();
     } else {
-      setLoading(true);
+      setHistory([]);
+      setLoading(false);
     }
   }, [user]);
 
   const loadHistory = async () => {
     if (!user) return;
-
     try {
       const historyData = await axiosInstance.get(`/history/${user?._id}`);
       setHistory(historyData.data);
@@ -40,15 +40,11 @@ export default function HistoryContent() {
       setLoading(false);
     }
   };
-  if (loading) {
-    return <div>Loading history...</div>;
-  }
 
   const handleRemoveFromHistory = async (historyId: string) => {
     try {
-      console.log("Removing from history:", historyId);
-
-      setHistory(history.filter((item) => item._id !== historyId));
+      await axiosInstance.delete(`/history/remove/${historyId}`);
+      setHistory((prev) => prev.filter((item) => item._id !== historyId));
     } catch (error) {
       console.error("Error removing from history:", error);
     }
@@ -56,7 +52,7 @@ export default function HistoryContent() {
 
   if (!user) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 animate-fade-up">
         <Clock className="w-16 h-16 mx-auto text-gray-400 mb-4" />
         <h2 className="text-xl font-semibold mb-2">
           Keep track of what you watch
@@ -68,15 +64,32 @@ export default function HistoryContent() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex gap-4 animate-fade-up">
+            <div className="w-40 aspect-video bg-gray-200 rounded-lg animate-skeleton" />
+            <div className="flex-1 space-y-2 py-1">
+              <div className="h-4 bg-gray-200 rounded animate-skeleton w-2/3" />
+              <div className="h-3 bg-gray-200 rounded animate-skeleton w-1/3" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   if (history.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 animate-fade-up">
         <Clock className="w-16 h-16 mx-auto text-gray-400 mb-4" />
         <h2 className="text-xl font-semibold mb-2">No watch history yet</h2>
         <p className="text-gray-600">Videos you watch will appear here.</p>
       </div>
     );
   }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -91,6 +104,8 @@ export default function HistoryContent() {
                 <video
                   src={`${BASE_URL}/${item.videoid?.filepath}`}
                   className="object-cover group-hover:scale-105 transition-transform duration-200"
+                  muted
+                  preload="metadata"
                 />
               </div>
             </Link>
@@ -101,9 +116,7 @@ export default function HistoryContent() {
                   {item.videoid.videotitle}
                 </h3>
               </Link>
-              <p className="text-sm text-gray-600">
-                {item.videoid.videochanel}
-              </p>
+              <p className="text-sm text-gray-600">{item.videoid.videochanel}</p>
               <p className="text-sm text-gray-600">
                 {item.videoid.views.toLocaleString()} views •{" "}
                 {formatDistanceToNow(new Date(item.videoid.createdAt))} ago

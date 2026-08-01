@@ -88,10 +88,10 @@ const VideoInfo = ({ video }: any) => {
   const handleDislike = async () => {
     if (!user) return;
     try {
-      const res = await axiosInstance.post(`/like/${video._id}`, {
+      const res = await axiosInstance.post(`/like/dislike/${video._id}`, {
         userId: user?._id,
       });
-      if (!res.data.liked) {
+      if (res.data.disliked) {
         if (isDisliked) {
           setDislikes((prev: any) => prev - 1);
           setIsDisliked(false);

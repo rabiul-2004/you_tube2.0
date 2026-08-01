@@ -21,6 +21,20 @@ export const handlewatchlater = async (req, res) => {
   }
 };
 
+export const deletewatchlater = async (req, res) => {
+  const { watchlaterId } = req.params;
+  try {
+    const deleted = await watchlater.findByIdAndDelete(watchlaterId);
+    if (!deleted) {
+      return res.status(404).json({ message: "Watch later not found" });
+    }
+    return res.status(200).json({ deleted: true });
+  } catch (error) {
+    console.error(" error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
 export const getallwatchlater = async (req, res) => {
   const { userId } = req.params;
   try {

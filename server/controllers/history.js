@@ -22,6 +22,19 @@ export const handleview = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+export const deletehistory = async (req, res) => {
+  const { historyId } = req.params;
+  try {
+    const deleted = await history.findByIdAndDelete(historyId);
+    if (!deleted) {
+      return res.status(404).json({ message: "History not found" });
+    }
+    return res.status(200).json({ deleted: true });
+  } catch (error) {
+    console.error(" error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
 export const getallhistoryVideo = async (req, res) => {
   const { userId } = req.params;
   try {

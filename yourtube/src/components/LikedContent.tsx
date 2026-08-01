@@ -44,8 +44,8 @@ export default function LikedVideosContent() {
     if (!user) return;
 
     try {
-      console.log("Unliking video:", videoId, "for user:", user.id);
-      setLikedVideos(likedVideos.filter((item) => item._id !== likedVideoId));
+      await axiosInstance.delete(`/like/remove/${likedVideoId}`);
+      setLikedVideos((prev) => prev.filter((item) => item._id !== likedVideoId));
     } catch (error) {
       console.error("Error unliking video:", error);
     }

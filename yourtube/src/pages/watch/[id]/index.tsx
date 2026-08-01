@@ -48,10 +48,12 @@ const WatchPage = () => {
       setvideo(null);
       setvide(null);
       try {
-        const res = await axiosInstance.get("/video/getall");
-        const video = res.data?.filter((vid: any) => vid._id === id);
-        setvideo(video?.[0]);
-        setvide(res.data);
+        const [videoRes, allRes] = await Promise.all([
+          axiosInstance.get(`/video/${id}`),
+          axiosInstance.get("/video/getall"),
+        ]);
+        setvideo(videoRes.data);
+        setvide(allRes.data);
       } catch (error) {
         console.log(error);
       } finally {
