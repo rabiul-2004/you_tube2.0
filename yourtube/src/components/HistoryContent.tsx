@@ -11,8 +11,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import axiosInstance, { BASE_URL } from "@/lib/axiosinstance";
+import axiosInstance from "@/lib/axiosinstance";
 import { useUser } from "@/lib/AuthContext";
+import VideoThumb from "./VideoThumb";
 
 export default function HistoryContent() {
   const [history, setHistory] = useState<any[]>([]);
@@ -101,12 +102,7 @@ export default function HistoryContent() {
           <div key={item._id} className="flex gap-4 group">
             <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
               <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden">
-                <video
-                  src={`${BASE_URL}/${item.videoid?.filepath}`}
-                  className="object-cover group-hover:scale-105 transition-transform duration-200"
-                  muted
-                  preload="metadata"
-                />
+                <VideoThumb filepath={item.videoid?.filepath} />
               </div>
             </Link>
 

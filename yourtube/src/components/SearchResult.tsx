@@ -3,6 +3,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SearchX } from "lucide-react";
+import VideoThumb from "./VideoThumb";
 
 const SearchResult = ({ query }: any) => {
   const [video, setvideos] = useState<any[] | null>(null);
@@ -100,13 +101,7 @@ const SearchResult = ({ query }: any) => {
           <div key={video._id} className="flex flex-col sm:flex-row gap-4 group">
             <Link href={`/watch/${video._id}`} className="flex-shrink-0">
               <div className="relative w-full sm:w-80 aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                <video
-                  src="/video/vdo.mp4"
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 rounded font-medium">
-                  10:24
-                </div>
+                <VideoThumb filepath={video.filepath} />
               </div>
             </Link>
 

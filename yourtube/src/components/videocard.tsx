@@ -3,11 +3,17 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { BASE_URL } from "@/lib/axiosinstance";
+import { formatDuration } from "@/lib/videoUtils";
 import { useState } from "react";
 
 export default function VideoCard({ video }: any) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [duration, setDuration] = useState<number | null>(null);
+
+  const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    setDuration(e.currentTarget.duration);
+  };
 
   return (
     <Link href={`/watch/${video?._id}`} className="group block animate-fade-up">
@@ -20,6 +26,7 @@ export default function VideoCard({ video }: any) {
                 loaded ? "opacity-100" : "opacity-0"
               }`}
               onLoadedData={() => setLoaded(true)}
+              onLoadedMetadata={handleLoadedMetadata}
               onError={() => setError(true)}
               muted
               preload="metadata"
@@ -32,9 +39,11 @@ export default function VideoCard({ video }: any) {
           {!loaded && !error && (
             <div className="absolute inset-0 animate-skeleton" />
           )}
-          <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[11px] px-1 rounded font-medium">
-            10:24
-          </div>
+          {formatDuration(duration) && (
+            <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[11px] px-1 rounded font-medium">
+              {formatDuration(duration)}
+            </div>
+          )}
         </div>
         <div className="flex gap-3 px-1">
           <Avatar className="w-9 h-9 flex-shrink-0 mt-0.5">
