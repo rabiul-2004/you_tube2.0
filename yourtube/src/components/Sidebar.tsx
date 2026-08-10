@@ -29,7 +29,7 @@ const Sidebar = ({
   const [showMore, setShowMore] = useState(false);
 
   const content = (
-    <div className="h-full overflow-y-auto scrollbar-hide">
+    <div className="h-full overflow-y-auto scrollbar-hide safe-area-bottom pb-8">
       <div className="p-2">
         {menuItems.map((item) => (
           <Link
@@ -37,7 +37,7 @@ const Sidebar = ({
             href={item.href}
             onClick={onClose}
             className={cn(
-              "flex items-center gap-5 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+              "flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 group touch-target",
               router.pathname === item.href
                 ? "bg-gray-100 font-medium"
                 : "hover:bg-gray-100"
@@ -60,7 +60,7 @@ const Sidebar = ({
             key={item.label}
             href={item.href}
             onClick={onClose}
-            className="flex items-center gap-5 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-gray-100"
+            className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100 touch-target"
           >
             <item.icon className="w-5 h-5 flex-shrink-0" />
             <span className="text-sm">{item.label}</span>
@@ -71,7 +71,7 @@ const Sidebar = ({
             <Link
               href="/"
               onClick={onClose}
-              className="flex items-center gap-5 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-gray-100"
+              className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100 touch-target"
             >
               <PlaySquare className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">Your videos</span>
@@ -80,7 +80,7 @@ const Sidebar = ({
         )}
         <button
           onClick={() => setShowMore(!showMore)}
-          className="flex items-center gap-5 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-gray-100 w-full"
+          className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100 w-full touch-target"
         >
           <ChevronDown
             className={cn(
@@ -104,7 +104,7 @@ const Sidebar = ({
               key={item}
               href="/"
               onClick={onClose}
-              className="flex items-center gap-5 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-gray-100"
+              className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100 touch-target"
             >
               <span className="text-sm">{item}</span>
             </Link>
@@ -141,7 +141,7 @@ const Sidebar = ({
         >
           <div className="absolute inset-0 bg-black/50 animate-fade-in" />
           <aside
-            className="relative w-72 h-full bg-white shadow-xl animate-slide-left overflow-hidden"
+            className="relative w-72 h-full bg-white shadow-xl animate-slide-left overflow-hidden safe-area-top safe-area-bottom"
             onClick={(e) => e.stopPropagation()}
           >
             {content}

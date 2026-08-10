@@ -84,13 +84,6 @@
   --animate-slide-right: slide-right 0.3s ease-out;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -119,6 +112,12 @@
 @keyframes slide-right {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 body {
@@ -217,5 +216,39 @@ body {
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .scroll-indicator {
+    background: linear-gradient(90deg, transparent, white 50%, transparent);
+    background-size: 200% 100%;
+  }
+  .scroll-indicator-left {
+    background-position: 0%;
+  }
+  .scroll-indicator-right {
+    background-position: 100%;
+  }
+  @media (max-width: 640px) {
+    .mobile-stack {
+      flex-direction: column;
+    }
+    .mobile-full {
+      width: 100%;
+    }
   }
 }

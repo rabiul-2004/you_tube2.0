@@ -7,7 +7,7 @@ function SkeletonCard({ index }: { index: number }) {
     <div className={`space-y-3 animate-fade-up stagger-${Math.min(index + 1, 8)}`}>
       <div className="aspect-video rounded-xl bg-gray-200 animate-skeleton" />
       <div className="flex gap-3">
-        <div className="w-9 h-9 rounded-full bg-gray-200 animate-skeleton flex-shrink-0" />
+        <div className="w-9 h-9 rounded-full bg-gray-200 animate-skeleton flex-shrink-0 hidden sm:block" />
         <div className="flex-1 space-y-2">
           <div className="h-4 bg-gray-200 rounded animate-skeleton w-full" />
           <div className="h-3 bg-gray-200 rounded animate-skeleton w-3/4" />
@@ -38,7 +38,7 @@ const Videogrid = () => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <SkeletonCard key={i} index={i} />
         ))}
@@ -47,10 +47,18 @@ const Videogrid = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div
+      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-4"
+      role="list"
+      aria-label="Videos"
+    >
       {videos.length > 0 ? (
         videos.map((video: any, i: number) => (
-          <div key={video._id} className={`animate-fade-up stagger-${Math.min((i % 8) + 1, 8)}`}>
+          <div
+            key={video._id}
+            className={`min-w-0 animate-fade-up stagger-${Math.min((i % 8) + 1, 8)}`}
+            role="listitem"
+          >
             <Videocard video={video} />
           </div>
         ))
@@ -58,7 +66,9 @@ const Videogrid = () => {
         <div className="col-span-full text-center py-16">
           <div className="text-6xl mb-4">🎬</div>
           <h3 className="text-lg font-medium text-gray-600">No videos yet</h3>
-          <p className="text-sm text-gray-500 mt-1">Upload a video to get started</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Upload a video to get started
+          </p>
         </div>
       )}
     </div>

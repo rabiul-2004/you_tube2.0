@@ -18,9 +18,9 @@ export default function App({ Component, pageProps }: AppProps) {
       <div className="min-h-screen bg-white text-black">
         <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         <Toaster />
-        <div className="flex">
+        <div className="flex min-w-0">
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          <main className="flex-1 min-h-[calc(100vh-56px)] animate-fade-in">
+          <main className="flex-1 min-w-0 max-w-full min-h-[calc(100vh-57px)] animate-fade-in safe-area-bottom">
             <Component {...pageProps} />
           </main>
         </div>
