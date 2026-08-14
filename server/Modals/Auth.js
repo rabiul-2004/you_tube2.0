@@ -6,6 +6,11 @@ const userschema = mongoose.Schema({
   description: { type: String },
   image: { type: String },
   joinedon: { type: Date, default: Date.now },
+  plan: { type: String, default: "Free" },
+  planDetails: {
+    name: { type: String, default: "Free" },
+    expiresAt: { type: Date, default: null },
+  },
 });
 
 export default mongoose.model("user", userschema);

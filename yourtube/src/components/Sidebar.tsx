@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Home, Compass, Clock, ThumbsUp, PlaySquare, Clock4, Library, ChevronDown } from "lucide-react";
+import { Home, Compass, Clock, ThumbsUp, PlaySquare, Clock4, Library, ChevronDown, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
@@ -66,6 +66,14 @@ const Sidebar = ({
             <span className="text-sm">{item.label}</span>
           </Link>
         ))}
+        <Link
+          href="/plans"
+          onClick={onClose}
+          className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100 touch-target"
+        >
+          <Crown className="w-5 h-5 flex-shrink-0 text-amber-500" />
+          <span className="text-sm font-medium">Upgrade / Plans</span>
+        </Link>
         {showMore && (
           <div className="animate-fade-up">
             <Link
