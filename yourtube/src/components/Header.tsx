@@ -1,4 +1,4 @@
-import { Bell, Menu, Mic, Search, User, VideoIcon, X } from "lucide-react";
+import { Bell, Crown, Menu, Mic, Search, User, VideoIcon, X } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/button";
 import Link from "next/link";
@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import Channeldialogue from "./channeldialogue";
 import { useRouter } from "next/router";
 import { useUser } from "@/lib/AuthContext";
+import { hasActivePaidPlan } from "@/lib/planUtils";
 import { cn } from "@/lib/utils";
 
 const Header = ({
@@ -181,6 +182,16 @@ const Header = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <div className="flex items-center justify-between px-2 py-2 border-b">
+                    <span className="text-xs text-gray-500">Plan</span>
+                    <Link
+                      href="/plans"
+                      className="flex items-center gap-1 text-sm font-medium touch-target py-1 px-2 rounded-lg hover:bg-gray-100"
+                    >
+                      <Crown className="w-4 h-4 text-amber-500" />
+                      {hasActivePaidPlan(user) ? user.plan : "Upgrade"}
+                    </Link>
+                  </div>
                   {user?.channelname ? (
                     <DropdownMenuItem asChild>
                       <Link href={`/channel/${user?._id}`} className="touch-target py-2">Your channel</Link>

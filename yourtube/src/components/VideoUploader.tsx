@@ -12,6 +12,7 @@ const VideoUploader = ({ channelId, channelName }: any) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoTitle, setVideoTitle] = useState("");
+  const [isPremium, setIsPremium] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const handlefilechange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -36,6 +37,7 @@ const VideoUploader = ({ channelId, channelName }: any) => {
   const resetForm = () => {
     setVideoFile(null);
     setVideoTitle("");
+    setIsPremium(false);
     setIsUploading(false);
     setUploadProgress(0);
     setUploadComplete(false);
@@ -58,6 +60,7 @@ const VideoUploader = ({ channelId, channelName }: any) => {
     formdata.append("videotitle", videoTitle);
     formdata.append("videochanel", channelName);
     formdata.append("uploader", channelId);
+    formdata.append("isPremium", String(isPremium));
     console.log(formdata)
     try {
       setIsUploading(true);
@@ -145,6 +148,19 @@ const VideoUploader = ({ channelId, channelName }: any) => {
                   disabled={isUploading || uploadComplete}
                   className="mt-1"
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="premium"
+                  checked={isPremium}
+                  onChange={(e) => setIsPremium(e.target.checked)}
+                  disabled={isUploading || uploadComplete}
+                  className="w-4 h-4 accent-red-600"
+                />
+                <Label htmlFor="premium" className="cursor-pointer">
+                  Premium content (requires a paid plan to watch)
+                </Label>
               </div>
             </div>
 

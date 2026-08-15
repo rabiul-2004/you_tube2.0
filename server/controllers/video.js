@@ -17,6 +17,7 @@ export const uploadvideo = async (req, res) => {
         filesize: req.file.size,
         videochanel: req.body.videochanel,
         uploader: req.body.uploader,
+        isPremium: req.body.isPremium === "true" || req.body.isPremium === true,
       });
       await file.save();
       return res.status(201).json("file uploaded successfully");
@@ -46,6 +47,21 @@ export const getvideobyid = async (req, res) => {
       return res.status(404).json({ message: "Video not found" });
     }
     return res.status(200).json(file);
+  } catch (error) {
+    console.error(" error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+export const getvideoByChannel = async (req, res) => {
+  const { channelId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(channelId)) {
+    return res.status(400).json({ message: "Invalid channel" });
+  }
+  try {
+    const files = await video
+      .find({ uploader: channelId })
+      .sort({ createdAt: -1 });
+    return res.status(200).send(files);
   } catch (error) {
     console.error(" error:", error);
     return res.status(500).json({ message: "Something went wrong" });

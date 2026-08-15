@@ -18,6 +18,23 @@ export const login = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+export const getuserbyid = async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "User unavailable..." });
+  }
+  try {
+    const user = await users.findById(id).select("-__v");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
 export const updateprofile = async (req, res) => {
   const { id: _id } = req.params;
   const { channelname, description } = req.body;

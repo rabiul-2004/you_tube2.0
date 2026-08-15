@@ -1,0 +1,78 @@
+import mongoose from "mongoose";
+import subscription from "../Modals/subscription.js";
+
+export const togglesubscribe = async (req, res) => {
+  const { channelId } = req.params;
+  const { userId } = req.body;
+  if (
+    !userId ||
+    !mongoose.Types.ObjectId.isValid(userId) ||
+    !mongoose.Types.ObjectId.isValid(channelId)
+  ) {
+    return res.status(400).json({ message: "Invalid user or channel" });
+  }
+  if (userId === channelId) {
+    return res.status(400).json({ message: "You cannot subscribe to yourself" });
+  }
+  try {
+    const exisitingsub = await subscription.findOne({
+      subscriber: userId,
+      channel: channelId,
+    });
+    if (exisitingsub) {
+      await subscription.findByIdAndDelete(exisitingsub._id);
+    } else {
+      await subscription.create({ subscriber: userId, channel: channelId });
+    }
+    const count = await subscription.countDocuments({ channel: channelId });
+    return res
+      .status(200)
+      .json({ subscribed: !exisitingsub, count });
+  } catch (error) {
+    console.error(" error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+export const getsubscriberinfo = async (req, res) => {
+  const { channelId } = req.params;
+  const { userId } = req.query;
+  if (!mongoose.Types.ObjectId.isValid(channelId)) {
+    return res.status(400).json({ message: "Invalid channel" });
+  }
+  try {
+    const count = await subscription.countDocuments({ channel: channelId });
+    let subscribed = false;
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      const sub = await subscription.findOne({
+        subscriber: userId,
+        channel: channelId,
+      });
+      subscribed = !!sub;
+    }
+    return res.status(200).json({ count, subscribed });
+  } catch (error) {
+    console.error(" error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+export const getsubscribedchannels = async (req, res) => {
+  const { userId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ message: "Invalid user" });
+  }
+  try {
+    const subs = await subscription
+      .find({ subscriber: userId })
+      .populate({
+        path: "channel",
+        model: "user",
+      })
+      .exec();
+    return res.status(200).json(subs);
+  } catch (error) {
+    console.error(" error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};

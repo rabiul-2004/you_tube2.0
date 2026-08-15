@@ -12,6 +12,9 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
+import { useSubscribe } from "@/lib/useSubscribe";
+import { formatCount } from "@/lib/formatCount";
+import Link from "next/link";
 
 const VideoInfo = ({ video }: any) => {
   const [likes, setlikes] = useState(video.Like || 0);
@@ -21,6 +24,9 @@ const VideoInfo = ({ video }: any) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const { user } = useUser();
   const [isWatchLater, setIsWatchLater] = useState(false);
+  const channelId = video.uploader;
+  const isOwner = user && channelId && user._id === channelId;
+  const { subscribed, count, loading, toggle } = useSubscribe(channelId);
 
   useEffect(() => {
     setlikes(video.Like || 0);
@@ -126,14 +132,31 @@ const VideoInfo = ({ video }: any) => {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Avatar className="w-10 h-10">
-            <AvatarFallback>{video.videochanel?.[0]}</AvatarFallback>
-          </Avatar>
+          <Link href={channelId ? `/channel/${channelId}` : "#"}>
+            <Avatar className="w-10 h-10">
+              <AvatarFallback>{video.videochanel?.[0]}</AvatarFallback>
+            </Avatar>
+          </Link>
           <div>
-            <h3 className="font-medium text-sm">{video.videochanel}</h3>
-            <p className="text-xs text-gray-600">1.2M subscribers</p>
+            <Link href={channelId ? `/channel/${channelId}` : "#"}>
+              <h3 className="font-medium text-sm hover:underline">
+                {video.videochanel}
+              </h3>
+            </Link>
+            <p className="text-xs text-gray-600">
+              {formatCount(count)} subscribers
+            </p>
           </div>
-          <Button className="ml-2 h-9 text-sm" variant="default">Subscribe</Button>
+          {user && !isOwner && (
+            <Button
+              className="ml-2 h-9 text-sm"
+              variant={subscribed ? "outline" : "default"}
+              onClick={toggle}
+              disabled={loading}
+            >
+              {loading ? "..." : subscribed ? "Subscribed" : "Subscribe"}
+            </Button>
+          )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center bg-gray-100 rounded-full">

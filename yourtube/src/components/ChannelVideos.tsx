@@ -1,12 +1,18 @@
 import VideoCard from "./videocard";
 
-export default function ChannelVideos({ videos }: any) {
+export default function ChannelVideos({ videos, isOwner }: any) {
   if (!videos || videos.length === 0) {
     return (
       <div className="text-center py-16 animate-fade-up">
         <div className="text-5xl mb-4">📹</div>
-        <p className="text-gray-600 text-lg font-medium">No videos uploaded yet</p>
-        <p className="text-sm text-gray-500 mt-1">Upload your first video to get started</p>
+        <p className="text-gray-600 text-lg font-medium">
+          {isOwner ? "No videos uploaded yet" : "No videos uploaded yet"}
+        </p>
+        <p className="text-sm text-gray-500 mt-1">
+          {isOwner
+            ? "Upload your first video to get started"
+            : "This channel hasn't uploaded any videos yet"}
+        </p>
       </div>
     );
   }

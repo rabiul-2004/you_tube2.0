@@ -1,9 +1,15 @@
-import React, { useState } from "react";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import React from "react";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
+import { useUser } from "@/lib/AuthContext";
+import { useSubscribe } from "@/lib/useSubscribe";
+import { formatCount } from "@/lib/formatCount";
 
-const ChannelHeader = ({ channel, user }: any) => {
-  const [isSubscribed, setIsSubscribed] = useState(false);
+const ChannelHeader = ({ channel, videoCount }: any) => {
+  const { user } = useUser();
+  const isOwner = user && channel && user._id === channel._id;
+  const { subscribed, count, loading, toggle } = useSubscribe(channel?._id);
+
   return (
     <div className="w-full animate-fade-up">
       <div className="relative h-32 md:h-48 lg:h-64 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-400 overflow-hidden">
@@ -13,6 +19,9 @@ const ChannelHeader = ({ channel, user }: any) => {
       <div className="px-4 sm:px-6 py-4 sm:py-6">
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
           <Avatar className="w-20 h-20 sm:w-32 sm:h-32 ring-4 ring-white -mt-10 sm:-mt-16">
+            {channel?.image ? (
+              <AvatarImage src={channel.image} alt={channel.channelname} />
+            ) : null}
             <AvatarFallback className="text-2xl sm:text-4xl">
               {channel?.channelname?.[0] || "?"}
             </AvatarFallback>
@@ -25,9 +34,9 @@ const ChannelHeader = ({ channel, user }: any) => {
             <div className="flex flex-wrap gap-4 text-sm text-gray-600">
               <span>@{channel?.channelname?.toLowerCase().replace(/\s+/g, "") || "channel"}</span>
               <span>•</span>
-              <span>1.2M subscribers</span>
+              <span>{formatCount(count)} subscribers</span>
               <span>•</span>
-              <span>123 videos</span>
+              <span>{videoCount || 0} videos</span>
             </div>
             {channel?.description && (
               <p className="text-sm text-gray-700 max-w-2xl line-clamp-2">
@@ -36,17 +45,18 @@ const ChannelHeader = ({ channel, user }: any) => {
             )}
           </div>
 
-          {user && user?._id !== channel?._id && (
+          {user && !isOwner && (
             <Button
-              onClick={() => setIsSubscribed(!isSubscribed)}
-              variant={isSubscribed ? "outline" : "default"}
+              onClick={toggle}
+              disabled={loading}
+              variant={subscribed ? "outline" : "default"}
               className={`shrink-0 transition-all duration-200 ${
-                isSubscribed
+                subscribed
                   ? "bg-gray-100 hover:bg-gray-200 border-gray-300"
                   : "bg-black text-white hover:bg-black/90"
               }`}
             >
-              {isSubscribed ? "Subscribed" : "Subscribe"}
+              {loading ? "..." : subscribed ? "Subscribed" : "Subscribe"}
             </Button>
           )}
         </div>

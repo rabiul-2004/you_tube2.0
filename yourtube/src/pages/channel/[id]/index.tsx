@@ -3,53 +3,74 @@ import Channeltabs from "@/components/Channeltabs";
 import ChannelVideos from "@/components/ChannelVideos";
 import VideoUploader from "@/components/VideoUploader";
 import { useUser } from "@/lib/AuthContext";
+import axiosInstance from "@/lib/axiosinstance";
 import { useRouter } from "next/router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 const ChannelPage = () => {
   const router = useRouter();
   const { id } = router.query;
   const { user } = useUser();
+  const [channel, setChannel] = useState<any>(null);
+  const [videos, setVideos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  let channel = user;
-  const videos = [
-    {
-      _id: "1",
-      videotitle: "Amazing Nature Documentary",
-      filename: "nature-doc.mp4",
-      filetype: "video/mp4",
-      filepath: "/videos/nature-doc.mp4",
-      filesize: "500MB",
-      videochanel: "Nature Channel",
-      Like: 1250,
-      views: 45000,
-      uploader: "nature_lover",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: "2",
-      videotitle: "Cooking Tutorial: Perfect Pasta",
-      filename: "pasta-tutorial.mp4",
-      filetype: "video/mp4",
-      filepath: "/videos/pasta-tutorial.mp4",
-      filesize: "300MB",
-      videochanel: "Chef's Kitchen",
-      Like: 890,
-      views: 23000,
-      uploader: "chef_master",
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-  ];
+  useEffect(() => {
+    if (!id) return;
+    let mounted = true;
+    const fetchChannel = async () => {
+      try {
+        const [ch, vids] = await Promise.all([
+          axiosInstance.get(`/user/${id}`),
+          axiosInstance.get(`/video/channel/${id}`),
+        ]);
+        if (!mounted) return;
+        setChannel(ch.data);
+        setVideos(vids.data);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetchChannel();
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
+
+  const isOwner = user && channel && user._id === channel._id;
 
   return (
     <div className="flex-1 min-h-screen bg-white animate-fade-in">
       <div className="max-w-full mx-auto">
-        <ChannelHeader channel={channel} user={user} />
-        <Channeltabs />
-        <div className="px-4 sm:px-6 pb-8 space-y-8">
-          <VideoUploader channelId={id} channelName={channel?.channelname} />
-          <ChannelVideos videos={videos} />
-        </div>
+        {loading ? (
+          <div className="animate-pulse p-6">
+            <div className="h-48 md:h-64 bg-gray-200 rounded-lg" />
+            <div className="flex items-center gap-4 p-6">
+              <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-full bg-gray-200" />
+              <div className="space-y-2 flex-1">
+                <div className="h-6 w-48 bg-gray-200 rounded" />
+                <div className="h-4 w-64 bg-gray-200 rounded" />
+              </div>
+            </div>
+          </div>
+        ) : channel ? (
+          <>
+            <ChannelHeader channel={channel} videoCount={videos.length} />
+            <Channeltabs />
+            <div className="px-4 sm:px-6 pb-8 space-y-8">
+              {isOwner && (
+                <VideoUploader channelId={id} channelName={channel?.channelname} />
+              )}
+              <ChannelVideos videos={videos} isOwner={isOwner} />
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-16 animate-fade-up">
+            <p className="text-gray-600 text-lg font-medium">Channel not found</p>
+          </div>
+        )}
       </div>
     </div>
   );

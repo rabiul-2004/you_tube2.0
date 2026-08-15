@@ -10,6 +10,7 @@ import watchlaterroutes from "./routes/watchlater.js";
 import historyrroutes from "./routes/history.js";
 import commentroutes from "./routes/comment.js";
 import planroutes from "./routes/plan.js";
+import subscriberoutes from "./routes/subscribe.js";
 dotenv.config();
 const app = express();
 import path from "path";
@@ -28,6 +29,7 @@ app.use("/watch", watchlaterroutes);
 app.use("/history", historyrroutes);
 app.use("/comment", commentroutes);
 app.use("/plan", planroutes);
+app.use("/subscribe", subscriberoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
