@@ -50,16 +50,8 @@ const Comments = ({ videoId }: any) => {
         commentbody: newComment,
         usercommented: user.name,
       });
-      if (res.data.comment) {
-        const newCommentObj: Comment = {
-          _id: Date.now().toString(),
-          videoid: videoId,
-          userid: user._id,
-          commentbody: newComment,
-          usercommented: user.name || "Anonymous",
-          commentedon: new Date().toISOString(),
-        };
-        setComments([newCommentObj, ...comments]);
+      if (res.data?._id) {
+        setComments([res.data, ...comments]);
       }
       setNewComment("");
     } catch (error) {

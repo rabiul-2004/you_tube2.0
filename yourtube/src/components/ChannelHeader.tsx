@@ -1,11 +1,12 @@
 import React from "react";
+import { Settings } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { useUser } from "@/lib/AuthContext";
 import { useSubscribe } from "@/lib/useSubscribe";
 import { formatCount } from "@/lib/formatCount";
 
-const ChannelHeader = ({ channel, videoCount }: any) => {
+const ChannelHeader = ({ channel, videoCount, onEditChannel }: any) => {
   const { user } = useUser();
   const isOwner = user && channel && user._id === channel._id;
   const { subscribed, count, loading, toggle } = useSubscribe(channel?._id);
@@ -45,19 +46,30 @@ const ChannelHeader = ({ channel, videoCount }: any) => {
             )}
           </div>
 
-          {user && !isOwner && (
+          {user && isOwner ? (
             <Button
-              onClick={toggle}
-              disabled={loading}
-              variant={subscribed ? "outline" : "default"}
-              className={`shrink-0 transition-all duration-200 ${
-                subscribed
-                  ? "bg-gray-100 hover:bg-gray-200 border-gray-300"
-                  : "bg-black text-white hover:bg-black/90"
-              }`}
+              variant="outline"
+              className="shrink-0 transition-all duration-200 bg-white border-gray-300 hover:bg-gray-100"
+              onClick={onEditChannel}
             >
-              {loading ? "..." : subscribed ? "Subscribed" : "Subscribe"}
+              <Settings className="w-4 h-4 mr-1.5" />
+              Edit channel
             </Button>
+          ) : (
+            user && (
+              <Button
+                onClick={toggle}
+                disabled={loading}
+                variant={subscribed ? "outline" : "default"}
+                className={`shrink-0 transition-all duration-200 ${
+                  subscribed
+                    ? "bg-gray-100 hover:bg-gray-200 border-gray-300"
+                    : "bg-black text-white hover:bg-black/90"
+                }`}
+              >
+                {loading ? "..." : subscribed ? "Subscribed" : "Subscribe"}
+              </Button>
+            )
           )}
         </div>
       </div>

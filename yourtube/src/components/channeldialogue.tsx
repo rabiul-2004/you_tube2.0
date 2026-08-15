@@ -14,14 +14,8 @@ import { Button } from "./ui/button";
 import axiosInstance from "@/lib/axiosinstance";
 import { useUser } from "@/lib/AuthContext";
 
-const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
+const Channeldialogue = ({ isopen, onclose, channeldata, mode, onSuccess }: any) => {
   const { user, login } = useUser();
-  // const user: any = {
-  //   id: "1",
-  //   name: "John Doe",
-  //   email: "john@example.com",
-  //   image: "https://github.com/shadcn.png?height=32&width=32",
-  // };
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
@@ -31,7 +25,7 @@ const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
   useEffect(() => {
     if (channeldata && mode === "edit") {
       setFormData({
-        name: channeldata.name || "",
+        name: channeldata.channelname || "",
         description: channeldata.description || "",
       });
     } else {
@@ -40,7 +34,7 @@ const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
         description: "",
       });
     }
-  }, [channeldata]);
+  }, [channeldata, mode]);
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -49,21 +43,32 @@ const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
   };
   const handlesubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setisSubmitting(true);
     const payload = {
       channelname: formData.name,
       description: formData.description,
     };
-    const response = await axiosInstance.patch(
-      `/user/update/${user._id}`,
-      payload
-    );
-    login(response?.data);
-    router.push(`/channel/${user?._id}`);
-    setFormData({
-      name: "",
-      description: "",
-    });
-    onclose();
+    try {
+      const response = await axiosInstance.patch(
+        `/user/update/${user._id}`,
+        payload
+      );
+      login(response?.data);
+      setFormData({
+        name: "",
+        description: "",
+      });
+      onclose();
+      if (onSuccess) {
+        onSuccess(response?.data);
+      } else {
+        router.push(`/channel/${user?._id}`);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setisSubmitting(false);
+    }
   };
   return (
     <Dialog open={isopen} onOpenChange={onclose}>

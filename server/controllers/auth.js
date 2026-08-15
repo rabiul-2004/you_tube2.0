@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import users from "../Modals/Auth.js";
+import video from "../Modals/video.js";
 
 export const login = async (req, res) => {
   const { email, name, image } = req.body;
@@ -52,6 +53,12 @@ export const updateprofile = async (req, res) => {
       },
       { new: true }
     );
+    if (updatedata && updatedata.channelname) {
+      await video.updateMany(
+        { uploader: _id },
+        { $set: { videochanel: updatedata.channelname } }
+      );
+    }
     return res.status(201).json(updatedata);
   } catch (error) {
     console.error(error);

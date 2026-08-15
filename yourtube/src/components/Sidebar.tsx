@@ -12,7 +12,7 @@ const menuItems = [
 ];
 
 const youItems = [
-  { icon: Library, label: "Library", href: "/" },
+  { icon: Library, label: "Library", href: "/library" },
   { icon: Clock, label: "History", href: "/history" },
   { icon: ThumbsUp, label: "Liked videos", href: "/liked" },
   { icon: Clock4, label: "Watch later", href: "/watch-later" },
@@ -77,7 +77,7 @@ const Sidebar = ({
         {showMore && (
           <div className="animate-fade-up">
             <Link
-              href="/"
+              href="/your-videos"
               onClick={onClose}
               className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100 touch-target"
             >
