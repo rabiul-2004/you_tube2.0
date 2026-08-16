@@ -6,8 +6,10 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Progress } from "./ui/progress";
 import axiosInstance from "@/lib/axiosinstance";
+import { useUser } from "@/lib/AuthContext";
 
 const VideoUploader = ({ channelId, channelName }: any) => {
+  const { user, emailVerified } = useUser();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -88,7 +90,12 @@ const VideoUploader = ({ channelId, channelName }: any) => {
   return (
     <div className="bg-gray-50 rounded-lg p-6">
       <h2 className="text-xl font-semibold mb-4">Upload a video</h2>
-
+      {user && !emailVerified ? (
+        <p className="text-sm text-amber-700 bg-amber-50 border rounded-lg px-3 py-2">
+          You need to verify your email before uploading videos. Check your
+          inbox for the verification link.
+        </p>
+      ) : (
       <div className="space-y-4">
         {!videoFile ? (
           <div
@@ -191,9 +198,10 @@ const VideoUploader = ({ channelId, channelName }: any) => {
                 </>
               )}
             </div>
-          </div>
+        </div>
         )}
       </div>
+      )}
     </div>
   );
 };

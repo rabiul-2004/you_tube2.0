@@ -22,7 +22,7 @@ const Comments = ({ videoId }: any) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
-  const { user } = useUser();
+  const { user, emailVerified } = useUser();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -118,7 +118,13 @@ const Comments = ({ videoId }: any) => {
         {comments.length} Comments
       </h2>
 
-      {user && (
+      {user && !emailVerified && (
+        <p className="text-sm text-amber-700 bg-amber-50 border rounded-lg px-3 py-2">
+          Verify your email to post comments.
+        </p>
+      )}
+
+      {user && emailVerified && (
         <div className="flex gap-4">
           <Avatar className="w-10 h-10 flex-shrink-0">
             <AvatarImage src={user.image || ""} />

@@ -12,20 +12,24 @@ import {
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import Channeldialogue from "./channeldialogue";
+import SignInDialog from "./SignInDialog";
 import { useRouter } from "next/router";
 import { useUser } from "@/lib/AuthContext";
 import { hasActivePaidPlan } from "@/lib/planUtils";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const Header = ({
   onMenuClick,
 }: {
   onMenuClick: () => void;
 }) => {
-  const { user, logout, handlegooglesignin, signingIn } = useUser();
+  const { user, logout, emailVerified, sendverificationemail } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isdialogeopen, setisdialogeopen] = useState(false);
+  const [issigninopen, setissigninopen] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -225,8 +229,7 @@ const Header = ({
           ) : (
             <Button
               className="flex items-center gap-2 text-sm h-9 px-3 touch-target"
-              onClick={handlegooglesignin}
-              disabled={signingIn}
+              onClick={() => setissigninopen(true)}
             >
               <User className="w-4 h-4" />
               <span className="hidden sm:inline">Sign in</span>
@@ -235,11 +238,43 @@ const Header = ({
         </div>
       </div>
 
+      {user && !emailVerified && (
+        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-50 border-t text-sm text-amber-800">
+          <span className="truncate">
+            Verify your email to upload videos and comment.
+          </span>
+          <button
+            onClick={async () => {
+              setResendingVerification(true);
+              try {
+                await sendverificationemail();
+                toast.success("Verification link sent. Check your inbox.");
+              } catch (error: any) {
+                console.error("Resend verification email failed:", error);
+                if (error?.code === "auth/too-many-requests") {
+                  toast.error(
+                    "Too many emails sent recently. Please wait a few minutes and try again."
+                  );
+                } else {
+                  toast.error("Could not send the email. Try again.");
+                }
+              } finally {
+                setResendingVerification(false);
+              }
+            }}
+            disabled={resendingVerification}
+            className="shrink-0 font-medium underline hover:text-amber-950"
+          >
+            {resendingVerification ? "Sending..." : "Resend email"}
+          </button>
+        </div>
+      )}
       <Channeldialogue
         isopen={isdialogeopen}
         onclose={() => setisdialogeopen(false)}
         mode="create"
       />
+      <SignInDialog isopen={issigninopen} onclose={() => setissigninopen(false)} />
     </header>
   );
 };

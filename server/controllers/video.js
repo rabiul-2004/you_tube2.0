@@ -21,8 +21,8 @@ export const uploadvideo = async (req, res) => {
         filepath: req.file.path.split(path.sep).join("/"),
         filetype: req.file.mimetype,
         filesize: req.file.size,
-        videochanel: req.body.videochanel,
-        uploader: req.body.uploader,
+        videochanel: req.user.channelname || req.user.name || "",
+        uploader: req.user._id.toString(),
         isPremium: req.body.isPremium === "true" || req.body.isPremium === true,
       });
       await file.save();
@@ -75,7 +75,7 @@ export const getvideoByChannel = async (req, res) => {
 };
 export const updatevideo = async (req, res) => {
   const { id } = req.params;
-  const { videotitle, isPremium, uploader } = req.body;
+  const { videotitle, isPremium } = req.body;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).json({ message: "Video not found" });
   }
@@ -84,7 +84,7 @@ export const updatevideo = async (req, res) => {
     if (!file) {
       return res.status(404).json({ message: "Video not found" });
     }
-    if (file.uploader !== uploader) {
+    if (file.uploader !== req.user._id.toString()) {
       return res
         .status(403)
         .json({ message: "You can only edit your own videos" });
@@ -107,7 +107,6 @@ export const updatevideo = async (req, res) => {
 };
 export const deletevideo = async (req, res) => {
   const { id } = req.params;
-  const { uploader } = req.body;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).json({ message: "Video not found" });
   }
@@ -116,7 +115,7 @@ export const deletevideo = async (req, res) => {
     if (!file) {
       return res.status(404).json({ message: "Video not found" });
     }
-    if (file.uploader !== uploader) {
+    if (file.uploader !== req.user._id.toString()) {
       return res
         .status(403)
         .json({ message: "You can only delete your own videos" });

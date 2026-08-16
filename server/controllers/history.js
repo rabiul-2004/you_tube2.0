@@ -1,9 +1,13 @@
 import video from "../Modals/video.js";
 import history from "../Modals/history.js";
+import mongoose from "mongoose";
 
 export const handlehistory = async (req, res) => {
-  const { userId } = req.body;
   const { videoId } = req.params;
+  const userId = req.user._id;
+  if (!mongoose.Types.ObjectId.isValid(videoId)) {
+    return res.status(400).json({ message: "Invalid video" });
+  }
   try {
     await history.create({ viewer: userId, videoid: videoId });
     await video.findByIdAndUpdate(videoId, { $inc: { views: 1 } });
@@ -25,10 +29,16 @@ export const handleview = async (req, res) => {
 export const deletehistory = async (req, res) => {
   const { historyId } = req.params;
   try {
-    const deleted = await history.findByIdAndDelete(historyId);
-    if (!deleted) {
+    const found = await history.findById(historyId);
+    if (!found) {
       return res.status(404).json({ message: "History not found" });
     }
+    if (found.viewer.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ message: "You can only delete your own history" });
+    }
+    await history.findByIdAndDelete(historyId);
     return res.status(200).json({ deleted: true });
   } catch (error) {
     console.error(" error:", error);
@@ -37,6 +47,9 @@ export const deletehistory = async (req, res) => {
 };
 export const getallhistoryVideo = async (req, res) => {
   const { userId } = req.params;
+  if (req.user._id.toString() !== userId) {
+    return res.status(403).json({ message: "Access denied" });
+  }
   try {
     const historyvideo = await history
       .find({ viewer: userId })

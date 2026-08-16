@@ -10,6 +10,7 @@ dist/
 
 server/uploads/
 server/node_modules/
+server/firebase-service-account.json
 *.log
 .DS_Store
 Thumbs.db

@@ -39,11 +39,12 @@ export const hasActivePaidPlan = (user) => {
 };
 
 export const createOrder = async (req, res) => {
-  const { userId, plan } = req.body;
+  const { plan } = req.body;
+  const userId = req.user._id;
   if (!PLANS[plan]) {
     return res.status(400).json({ message: "Invalid plan" });
   }
-  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json({ message: "Invalid user" });
   }
   const planConfig = PLANS[plan];
@@ -75,7 +76,8 @@ export const createOrder = async (req, res) => {
 };
 
 export const verifyPayment = async (req, res) => {
-  const { userId, orderId, paymentId, signature, plan } = req.body;
+  const { orderId, paymentId, signature, plan } = req.body;
+  const userId = req.user._id;
   if (!PLANS[plan]) {
     return res.status(400).json({ message: "Invalid plan" });
   }
@@ -87,14 +89,21 @@ export const verifyPayment = async (req, res) => {
     return res.status(400).json({ message: "Invalid signature" });
   }
   try {
-    const payDoc = await payment.findOneAndUpdate(
-      { razorpayOrderId: orderId, user: userId },
-      { $set: { paymentId, status: "paid" } },
-      { new: true }
-    );
+    const payDoc = await payment.findOne({
+      razorpayOrderId: orderId,
+      user: userId,
+    });
     if (!payDoc) {
       return res.status(404).json({ message: "Order not found" });
     }
+    if (payDoc.plan !== plan) {
+      return res
+        .status(400)
+        .json({ message: "Plan does not match the paid order" });
+    }
+    await payment.findByIdAndUpdate(payDoc._id, {
+      $set: { paymentId, status: "paid" },
+    });
     const expiresAt = new Date(
       Date.now() + PLANS[plan].durationDays * 24 * 3600 * 1000
     );
@@ -137,6 +146,9 @@ export const verifyPayment = async (req, res) => {
 
 export const getPlanStatus = async (req, res) => {
   const { userId } = req.params;
+  if (req.user._id.toString() !== userId) {
+    return res.status(403).json({ message: "Access denied" });
+  }
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json({ message: "Invalid user" });
   }

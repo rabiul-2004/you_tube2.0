@@ -5,10 +5,11 @@ import {
   handleview,
   deletehistory,
 } from "../controllers/history.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const routes = express.Router();
-routes.get("/:userId", getallhistoryVideo);
+routes.get("/:userId", requireAuth, getallhistoryVideo);
 routes.post("/views/:videoId", handleview);
-routes.post("/:videoId", handlehistory);
-routes.delete("/remove/:historyId", deletehistory);
+routes.post("/:videoId", requireAuth, handlehistory);
+routes.delete("/remove/:historyId", requireAuth, deletehistory);
 export default routes;

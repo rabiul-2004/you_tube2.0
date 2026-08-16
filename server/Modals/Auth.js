@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 const userschema = mongoose.Schema({
-  email: { type: String, required: true },
+  email: { type: String, required: true, unique: true, lowercase: true },
+  firebaseUid: { type: String, unique: true, sparse: true },
   name: { type: String },
   channelname: { type: String },
   description: { type: String },

@@ -4,9 +4,10 @@ import {
   getsubscriberinfo,
   getsubscribedchannels,
 } from "../controllers/subscribe.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const routes = express.Router();
-routes.post("/:channelId", togglesubscribe);
-routes.get("/channels/:userId", getsubscribedchannels);
+routes.post("/:channelId", requireAuth, togglesubscribe);
+routes.get("/channels/:userId", requireAuth, getsubscribedchannels);
 routes.get("/:channelId", getsubscriberinfo);
 export default routes;

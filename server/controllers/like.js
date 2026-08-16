@@ -4,8 +4,11 @@ import like from "../Modals/like.js";
 import dislike from "../Modals/dislike.js";
 
 export const handlelike = async (req, res) => {
-  const { userId } = req.body;
   const { videoId } = req.params;
+  const userId = req.user._id;
+  if (!mongoose.Types.ObjectId.isValid(videoId)) {
+    return res.status(400).json({ message: "Invalid video" });
+  }
   try {
     const exisitinglike = await like.findOne({
       viewer: userId,
@@ -35,8 +38,11 @@ export const handlelike = async (req, res) => {
 };
 
 export const handledislike = async (req, res) => {
-  const { userId } = req.body;
   const { videoId } = req.params;
+  const userId = req.user._id;
+  if (!mongoose.Types.ObjectId.isValid(videoId)) {
+    return res.status(400).json({ message: "Invalid video" });
+  }
   try {
     const exisitingdislike = await dislike.findOne({
       viewer: userId,
@@ -68,10 +74,16 @@ export const handledislike = async (req, res) => {
 export const deletelike = async (req, res) => {
   const { likeId } = req.params;
   try {
-    const deleted = await like.findByIdAndDelete(likeId);
+    const deleted = await like.findById(likeId);
     if (!deleted) {
       return res.status(404).json({ message: "Like not found" });
     }
+    if (deleted.viewer.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ message: "You can only remove your own likes" });
+    }
+    await like.findByIdAndDelete(likeId);
     await video.findByIdAndUpdate(deleted.videoid, { $inc: { Like: -1 } });
     return res.status(200).json({ deleted: true });
   } catch (error) {
@@ -82,6 +94,9 @@ export const deletelike = async (req, res) => {
 
 export const getallLikedVideo = async (req, res) => {
   const { userId } = req.params;
+  if (req.user._id.toString() !== userId) {
+    return res.status(403).json({ message: "Access denied" });
+  }
   try {
     const likevideo = await like
       .find({ viewer: userId })

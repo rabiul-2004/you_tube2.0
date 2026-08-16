@@ -3,15 +3,14 @@ import subscription from "../Modals/subscription.js";
 
 export const togglesubscribe = async (req, res) => {
   const { channelId } = req.params;
-  const { userId } = req.body;
+  const userId = req.user._id;
   if (
-    !userId ||
     !mongoose.Types.ObjectId.isValid(userId) ||
     !mongoose.Types.ObjectId.isValid(channelId)
   ) {
     return res.status(400).json({ message: "Invalid user or channel" });
   }
-  if (userId === channelId) {
+  if (userId.toString() === channelId) {
     return res.status(400).json({ message: "You cannot subscribe to yourself" });
   }
   try {
@@ -59,6 +58,9 @@ export const getsubscriberinfo = async (req, res) => {
 
 export const getsubscribedchannels = async (req, res) => {
   const { userId } = req.params;
+  if (req.user._id.toString() !== userId) {
+    return res.status(403).json({ message: "Access denied" });
+  }
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json({ message: "Invalid user" });
   }

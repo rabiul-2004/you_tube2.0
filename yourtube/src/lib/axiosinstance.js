@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getAuth } from "firebase/auth";
 
 export const BASE_URL =
   typeof window !== "undefined"
@@ -8,4 +9,14 @@ export const BASE_URL =
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
 });
+
+axiosInstance.interceptors.request.use(async (config) => {
+  const user = getAuth().currentUser;
+  if (user) {
+    const token = await user.getIdToken();
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export default axiosInstance;
