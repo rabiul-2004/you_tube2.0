@@ -75,13 +75,13 @@ export const updateprofile = async (req, res) => {
       },
       { new: true }
     );
-    if (updatedata && updatedata.channelname) {
+    if (updatedata) {
       await video.updateMany(
         { uploader: _id },
-        { $set: { videochanel: updatedata.channelname } }
+        { $set: { videochanel: updatedata.channelname || "" } }
       );
     }
-    return res.status(201).json(updatedata);
+    return res.status(200).json(updatedata);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Something went wrong" });

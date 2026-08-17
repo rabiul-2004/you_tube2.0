@@ -85,7 +85,16 @@ export const verifyPayment = async (req, res) => {
     .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
     .update(`${orderId}|${paymentId}`)
     .digest("hex");
-  if (expectedSignature !== signature) {
+  try {
+    const sigBuf = Buffer.from(signature || "", "utf8");
+    const expectedBuf = Buffer.from(expectedSignature, "utf8");
+    if (
+      sigBuf.length !== expectedBuf.length ||
+      !crypto.timingSafeEqual(sigBuf, expectedBuf)
+    ) {
+      return res.status(400).json({ message: "Invalid signature" });
+    }
+  } catch {
     return res.status(400).json({ message: "Invalid signature" });
   }
   try {
@@ -95,6 +104,11 @@ export const verifyPayment = async (req, res) => {
     });
     if (!payDoc) {
       return res.status(404).json({ message: "Order not found" });
+    }
+    if (payDoc.status === "paid") {
+      return res
+        .status(200)
+        .json({ success: true, emailSent: false, message: "Already verified" });
     }
     if (payDoc.plan !== plan) {
       return res

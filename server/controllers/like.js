@@ -10,27 +10,27 @@ export const handlelike = async (req, res) => {
     return res.status(400).json({ message: "Invalid video" });
   }
   try {
-    const exisitinglike = await like.findOne({
-      viewer: userId,
-      videoid: videoId,
-    });
-    if (exisitinglike) {
-      await like.findByIdAndDelete(exisitinglike._id);
+    const removed = await like.findOneAndDelete({ viewer: userId, videoid: videoId });
+    if (removed) {
       await video.findByIdAndUpdate(videoId, { $inc: { Like: -1 } });
-      return res.status(200).json({ liked: false });
-    } else {
-      await like.create({ viewer: userId, videoid: videoId });
-      await video.findByIdAndUpdate(videoId, { $inc: { Like: 1 } });
-      const exisitingdislike = await dislike.findOne({
-        viewer: userId,
-        videoid: videoId,
-      });
-      if (exisitingdislike) {
-        await dislike.findByIdAndDelete(exisitingdislike._id);
+      const removedDislike = await dislike.findOneAndDelete({ viewer: userId, videoid: videoId });
+      if (removedDislike) {
         await video.findByIdAndUpdate(videoId, { $inc: { Dislike: -1 } });
       }
-      return res.status(200).json({ liked: true });
+      return res.status(200).json({ liked: false });
     }
+    const created = await like.findOneAndUpdate(
+      { viewer: userId, videoid: videoId },
+      { $setOnInsert: { viewer: userId, videoid: videoId } },
+      { upsert: true, new: true, rawResult: true }
+    );
+    if (!created.lastErrorObject?.updatedExisting) {
+      const removedDislike = await dislike.findOneAndDelete({ viewer: userId, videoid: videoId });
+      const inc = { Like: 1 };
+      if (removedDislike) inc.Dislike = -1;
+      await video.findByIdAndUpdate(videoId, { $inc: inc });
+    }
+    return res.status(200).json({ liked: true });
   } catch (error) {
     console.error(" error:", error);
     return res.status(500).json({ message: "Something went wrong" });
@@ -44,27 +44,27 @@ export const handledislike = async (req, res) => {
     return res.status(400).json({ message: "Invalid video" });
   }
   try {
-    const exisitingdislike = await dislike.findOne({
-      viewer: userId,
-      videoid: videoId,
-    });
-    if (exisitingdislike) {
-      await dislike.findByIdAndDelete(exisitingdislike._id);
+    const removed = await dislike.findOneAndDelete({ viewer: userId, videoid: videoId });
+    if (removed) {
       await video.findByIdAndUpdate(videoId, { $inc: { Dislike: -1 } });
-      return res.status(200).json({ disliked: false });
-    } else {
-      await dislike.create({ viewer: userId, videoid: videoId });
-      await video.findByIdAndUpdate(videoId, { $inc: { Dislike: 1 } });
-      const exisitinglike = await like.findOne({
-        viewer: userId,
-        videoid: videoId,
-      });
-      if (exisitinglike) {
-        await like.findByIdAndDelete(exisitinglike._id);
+      const removedLike = await like.findOneAndDelete({ viewer: userId, videoid: videoId });
+      if (removedLike) {
         await video.findByIdAndUpdate(videoId, { $inc: { Like: -1 } });
       }
-      return res.status(200).json({ disliked: true });
+      return res.status(200).json({ disliked: false });
     }
+    const created = await dislike.findOneAndUpdate(
+      { viewer: userId, videoid: videoId },
+      { $setOnInsert: { viewer: userId, videoid: videoId } },
+      { upsert: true, new: true, rawResult: true }
+    );
+    if (!created.lastErrorObject?.updatedExisting) {
+      const removedLike = await like.findOneAndDelete({ viewer: userId, videoid: videoId });
+      const inc = { Dislike: 1 };
+      if (removedLike) inc.Like = -1;
+      await video.findByIdAndUpdate(videoId, { $inc: inc });
+    }
+    return res.status(200).json({ disliked: true });
   } catch (error) {
     console.error(" error:", error);
     return res.status(500).json({ message: "Something went wrong" });

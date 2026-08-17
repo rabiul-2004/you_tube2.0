@@ -33,7 +33,7 @@ export default function YourVideosContent() {
       setVideos([]);
       setLoading(false);
     }
-  }, [user]);
+  }, [user?._id]);
 
   if (!user) {
     return (

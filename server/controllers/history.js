@@ -17,15 +17,7 @@ export const handlehistory = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
-export const handleview = async (req, res) => {
-  const { videoId } = req.params;
-  try {
-    await video.findByIdAndUpdate(videoId, { $inc: { views: 1 } });
-  } catch (error) {
-    console.error(" error:", error);
-    return res.status(500).json({ message: "Something went wrong" });
-  }
-};
+
 export const deletehistory = async (req, res) => {
   const { historyId } = req.params;
   try {

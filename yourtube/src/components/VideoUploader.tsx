@@ -17,6 +17,7 @@ const VideoUploader = ({ channelId, channelName }: any) => {
   const [isPremium, setIsPremium] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const handlefilechange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -48,9 +49,13 @@ const VideoUploader = ({ channelId, channelName }: any) => {
     }
   };
   const cancelUpload = () => {
-    if (isUploading) {
-      toast.error("Your video upload has been cancelled");
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
     }
+    setIsUploading(false);
+    setUploadProgress(0);
+    toast.info("Upload cancelled");
   };
   const handleUpload = async () => {
     if (!videoFile || !videoTitle.trim()) {
@@ -63,14 +68,16 @@ const VideoUploader = ({ channelId, channelName }: any) => {
     formdata.append("videochanel", channelName);
     formdata.append("uploader", channelId);
     formdata.append("isPremium", String(isPremium));
-    console.log(formdata)
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
       setIsUploading(true);
       setUploadProgress(0);
-      const res = await axiosInstance.post("/video/upload", formdata, {
-         headers: {
-    "Content-Type": "multipart/form-data", // ✅ MUST for FormData
-  },
+      await axiosInstance.post("/video/upload", formdata, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        signal: controller.signal,
         onUploadProgress: (progresEvent: any) => {
           const progress = Math.round(
             (progresEvent.loaded * 100) / progresEvent.total
@@ -78,12 +85,14 @@ const VideoUploader = ({ channelId, channelName }: any) => {
           setUploadProgress(progress);
         },
       });
-      toast.success("Upload successfully");
+      toast.success("Upload successful");
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === "CanceledError" || error?.name === "AbortError") return;
       console.error("Error uploading video:", error);
       toast.error("There was an error uploading your video. Please try again.");
     } finally {
+      abortRef.current = null;
       setIsUploading(false);
     }
   };

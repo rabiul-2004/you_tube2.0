@@ -37,12 +37,12 @@ export const getallcomment = async (req, res) => {
 export const deletecomment = async (req, res) => {
   const { id: _id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(_id)) {
-    return res.status(404).send("comment unavailable");
+    return res.status(404).json({ message: "Comment unavailable" });
   }
   try {
     const found = await comment.findById(_id);
     if (!found) {
-      return res.status(404).send("comment unavailable");
+      return res.status(404).json({ message: "Comment unavailable" });
     }
     if (found.userid.toString() !== req.user._id.toString()) {
       return res
@@ -61,7 +61,7 @@ export const editcomment = async (req, res) => {
   const { id: _id } = req.params;
   const { commentbody } = req.body;
   if (!mongoose.Types.ObjectId.isValid(_id)) {
-    return res.status(404).send("comment unavailable");
+    return res.status(404).json({ message: "Comment unavailable" });
   }
   if (!commentbody || !commentbody.trim()) {
     return res.status(400).json({ message: "Comment cannot be empty" });
@@ -69,7 +69,7 @@ export const editcomment = async (req, res) => {
   try {
     const found = await comment.findById(_id);
     if (!found) {
-      return res.status(404).send("comment unavailable");
+      return res.status(404).json({ message: "Comment unavailable" });
     }
     if (found.userid.toString() !== req.user._id.toString()) {
       return res

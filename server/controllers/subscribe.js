@@ -14,19 +14,21 @@ export const togglesubscribe = async (req, res) => {
     return res.status(400).json({ message: "You cannot subscribe to yourself" });
   }
   try {
-    const exisitingsub = await subscription.findOne({
+    const removed = await subscription.findOneAndDelete({
       subscriber: userId,
       channel: channelId,
     });
-    if (exisitingsub) {
-      await subscription.findByIdAndDelete(exisitingsub._id);
-    } else {
-      await subscription.create({ subscriber: userId, channel: channelId });
+    if (removed) {
+      const count = await subscription.countDocuments({ channel: channelId });
+      return res.status(200).json({ subscribed: false, count });
     }
+    await subscription.findOneAndUpdate(
+      { subscriber: userId, channel: channelId },
+      { $setOnInsert: { subscriber: userId, channel: channelId } },
+      { upsert: true, new: true }
+    );
     const count = await subscription.countDocuments({ channel: channelId });
-    return res
-      .status(200)
-      .json({ subscribed: !exisitingsub, count });
+    return res.status(200).json({ subscribed: true, count });
   } catch (error) {
     console.error(" error:", error);
     return res.status(500).json({ message: "Something went wrong" });

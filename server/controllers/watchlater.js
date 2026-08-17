@@ -8,17 +8,16 @@ export const handlewatchlater = async (req, res) => {
     return res.status(400).json({ message: "Invalid video" });
   }
   try {
-    const exisitingwatchlater = await watchlater.findOne({
-      viewer: userId,
-      videoid: videoId,
-    });
-    if (exisitingwatchlater) {
-      await watchlater.findByIdAndDelete(exisitingwatchlater._id);
+    const removed = await watchlater.findOneAndDelete({ viewer: userId, videoid: videoId });
+    if (removed) {
       return res.status(200).json({ watchlater: false });
-    } else {
-      await watchlater.create({ viewer: userId, videoid: videoId });
-      return res.status(200).json({ watchlater: true });
     }
+    await watchlater.findOneAndUpdate(
+      { viewer: userId, videoid: videoId },
+      { $setOnInsert: { viewer: userId, videoid: videoId } },
+      { upsert: true, new: true }
+    );
+    return res.status(200).json({ watchlater: true });
   } catch (error) {
     console.error(" error:", error);
     return res.status(500).json({ message: "Something went wrong" });

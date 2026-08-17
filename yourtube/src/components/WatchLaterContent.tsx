@@ -25,7 +25,7 @@ export default function WatchLaterContent() {
     if (user) {
       loadWatchLater();
     }
-  }, [user]);
+  }, [user?._id]);
 
   const loadWatchLater = async () => {
     if (!user) return;
@@ -41,9 +41,6 @@ export default function WatchLaterContent() {
     }
   };
 
-  if (loading) {
-    return <div>Loading watch later...</div>;
-  }
   const handleRemoveFromWatchLater = async (watchLaterId: string) => {
     try {
       await axiosInstance.delete(`/watch/remove/${watchLaterId}`);
@@ -63,6 +60,10 @@ export default function WatchLaterContent() {
         </p>
       </div>
     );
+  }
+
+  if (loading) {
+    return <div>Loading watch later...</div>;
   }
 
   if (watchLater.length === 0) {
@@ -87,7 +88,7 @@ export default function WatchLaterContent() {
       </div>
 
       <div className="space-y-4">
-        {watchLater.map((item) => (
+        {watchLater.filter((item) => item.videoid).map((item) => (
           <div key={item._id} className="flex gap-4 group">
             <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
               <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden">

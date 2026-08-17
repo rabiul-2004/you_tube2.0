@@ -26,7 +26,7 @@ export const uploadvideo = async (req, res) => {
         isPremium: req.body.isPremium === "true" || req.body.isPremium === true,
       });
       await file.save();
-      return res.status(201).json("file uploaded successfully");
+      return res.status(201).json({ message: "File uploaded successfully" });
     } catch (error) {
       console.error(" error:", error);
       return res.status(500).json({ message: "Something went wrong" });
@@ -89,14 +89,13 @@ export const updatevideo = async (req, res) => {
         .status(403)
         .json({ message: "You can only edit your own videos" });
     }
+    const updateFields = {};
+    if (videotitle !== undefined) updateFields.videotitle = videotitle;
+    if (isPremium !== undefined)
+      updateFields.isPremium = isPremium === "true" || isPremium === true;
     const updatedfile = await video.findByIdAndUpdate(
       id,
-      {
-        $set: {
-          videotitle: videotitle,
-          isPremium: isPremium === "true" || isPremium === true,
-        },
-      },
+      { $set: updateFields },
       { new: true }
     );
     return res.status(200).json(updatedfile);

@@ -55,7 +55,7 @@ export default function LibraryContent() {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [user?._id]);
 
   const items: any[] = [
     { href: "/history", icon: Clock, label: "History", count: counts.history },

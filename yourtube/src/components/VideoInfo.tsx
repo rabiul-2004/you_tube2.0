@@ -33,7 +33,7 @@ const VideoInfo = ({ video }: any) => {
     setDislikes(video.Dislike || 0);
     setIsLiked(false);
     setIsDisliked(false);
-  }, [video]);
+  }, [video._id]);
 
   useEffect(() => {
     const handleviews = async () => {
@@ -42,15 +42,13 @@ const VideoInfo = ({ video }: any) => {
           await axiosInstance.post(`/history/${video._id}`, {
             userId: user?._id,
           });
-        } else {
-          await axiosInstance.post(`/history/views/${video?._id}`);
         }
       } catch (error) {
         console.log(error);
       }
     };
     handleviews();
-  }, [user, video._id]);
+  }, [user?._id, video._id]);
 
   const handleLike = async () => {
     if (!user) return;
@@ -77,6 +75,7 @@ const VideoInfo = ({ video }: any) => {
   };
 
   const handleWatchLater = async () => {
+    if (!user) return;
     try {
       const res = await axiosInstance.post(`/watch/${video._id}`, {
         userId: user?._id,
@@ -212,7 +211,7 @@ const VideoInfo = ({ video }: any) => {
           <span>{formatDistanceToNow(new Date(video.createdAt))} ago</span>
         </div>
         <div className={`text-sm text-gray-700 ${showFullDescription ? "" : "line-clamp-3"}`}>
-          <p>Sample video description. This would contain the actual video description from the database.</p>
+          <p>{video.description || "No description"}</p>
         </div>
         <button
           className="mt-2 text-sm font-medium text-gray-700 hover:text-black transition-colors"
