@@ -49,7 +49,7 @@ export default function VideoCard({ video }: any) {
       className="group block w-full min-w-0 animate-fade-up"
     >
       <div ref={containerRef} className="space-y-2 sm:space-y-3 w-full min-w-0">
-        <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-100">
+        <div className="relative aspect-video rounded-xl overflow-hidden bg-secondary">
           {!error ? (
             <>
               <video
@@ -70,7 +70,7 @@ export default function VideoCard({ video }: any) {
               )}
             </>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-200 text-gray-400 text-sm">
+            <div className="absolute inset-0 flex items-center justify-center bg-secondary text-muted-foreground text-sm">
               Video unavailable
             </div>
           )}
@@ -88,10 +88,10 @@ export default function VideoCard({ video }: any) {
             <h3 className="font-medium text-[13px] sm:text-sm line-clamp-2 leading-4 sm:leading-5 group-hover:text-blue-600 transition-colors duration-200 break-words">
               {video?.videotitle}
             </h3>
-            <p className="text-[11px] sm:text-xs text-gray-600 mt-1 truncate hover:text-gray-900 transition-colors">
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 truncate hover:text-foreground transition-colors">
               {video?.videochanel}
             </p>
-            <p className="text-[11px] sm:text-xs text-gray-600 mt-0.5 truncate">
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">
               {video?.views?.toLocaleString()} views •{" "}
               {formatDistanceToNow(new Date(video?.createdAt))} ago
             </p>

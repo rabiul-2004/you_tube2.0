@@ -40,7 +40,7 @@ export default function YourVideosContent() {
       <div className="text-center py-12 animate-fade-up">
         <Clapperboard className="w-16 h-16 mx-auto text-gray-400 mb-4" />
         <h2 className="text-xl font-semibold mb-2">Manage your uploads</h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Sign in to see videos you've uploaded.
         </p>
       </div>
@@ -66,7 +66,7 @@ export default function YourVideosContent() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-600">{videos.length} videos</p>
+        <p className="text-sm text-muted-foreground">{videos.length} videos</p>
         {user?.channelname && (
           <Link href={`/channel/${user._id}`}>
             <Button variant="outline" size="sm">

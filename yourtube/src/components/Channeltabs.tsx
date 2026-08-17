@@ -24,7 +24,7 @@ const Channeltabs = () => {
             className={`px-0 py-3 sm:py-4 border-b-2 rounded-none shrink-0 transition-all duration-200 text-sm ${
               activeTab === tab.id
                 ? "border-black text-black font-medium"
-                : "border-transparent text-gray-600 hover:text-black"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
             onClick={() => setActiveTab(tab.id)}
           >

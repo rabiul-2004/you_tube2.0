@@ -160,7 +160,7 @@ const Comments = ({ videoId }: any) => {
 
       <div className="space-y-5">
         {comments.length === 0 ? (
-          <p className="text-sm text-gray-500 italic text-center py-8">
+          <p className="text-sm text-muted-foreground italic text-center py-8">
             No comments yet. Be the first to comment!
           </p>
         ) : (
@@ -176,7 +176,7 @@ const Comments = ({ videoId }: any) => {
                   <span className="font-medium text-sm">
                     {comment.usercommented}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(comment.commentedon))} ago
                   </span>
                 </div>
@@ -199,9 +199,9 @@ const Comments = ({ videoId }: any) => {
                   </div>
                 ) : (
                   <>
-                    <p className="text-sm text-gray-800">{comment.commentbody}</p>
+                    <p className="text-sm text-foreground">{comment.commentbody}</p>
                     {comment.userid === user?._id && (
-                      <div className="flex gap-3 mt-1.5 text-xs text-gray-500">
+                      <div className="flex gap-3 mt-1.5 text-xs text-muted-foreground">
                         <button
                           className="hover:text-black transition-colors font-medium"
                           onClick={() => handleEdit(comment)}

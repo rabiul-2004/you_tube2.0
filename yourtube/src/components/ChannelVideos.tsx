@@ -13,10 +13,10 @@ export default function ChannelVideos({ videos, isOwner, onVideoUpdated }: any) 
     return (
       <div className="text-center py-16 animate-fade-up">
         <div className="text-5xl mb-4">📹</div>
-        <p className="text-gray-600 text-lg font-medium">
+        <p className="text-muted-foreground text-lg font-medium">
           {isOwner ? "No videos uploaded yet" : "No videos uploaded yet"}
         </p>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-muted-foreground/70 mt-1">
           {isOwner
             ? "Upload your first video to get started"
             : "This channel hasn't uploaded any videos yet"}

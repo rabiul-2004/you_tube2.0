@@ -27,7 +27,7 @@ export default function VideoThumb({ filepath }: { filepath?: string }) {
           preload="metadata"
         />
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+        <div className="absolute inset-0 flex items-center justify-center bg-secondary text-muted-foreground text-xs">
           Unavailable
         </div>
       )}

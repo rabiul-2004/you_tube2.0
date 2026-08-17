@@ -58,7 +58,7 @@ export default function HistoryContent() {
         <h2 className="text-xl font-semibold mb-2">
           Keep track of what you watch
         </h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Watch history isn't viewable when signed out.
         </p>
       </div>
@@ -86,7 +86,7 @@ export default function HistoryContent() {
       <div className="text-center py-12 animate-fade-up">
         <Clock className="w-16 h-16 mx-auto text-gray-400 mb-4" />
         <h2 className="text-xl font-semibold mb-2">No watch history yet</h2>
-        <p className="text-gray-600">Videos you watch will appear here.</p>
+        <p className="text-muted-foreground">Videos you watch will appear here.</p>
       </div>
     );
   }
@@ -94,14 +94,14 @@ export default function HistoryContent() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-600">{history.length} videos</p>
+        <p className="text-sm text-muted-foreground">{history.length} videos</p>
       </div>
 
       <div className="space-y-4">
         {history.filter((item) => item.videoid).map((item) => (
           <div key={item._id} className="flex gap-4 group">
             <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
-              <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden">
+              <div className="relative w-40 aspect-video bg-secondary rounded overflow-hidden">
                 <VideoThumb filepath={item.videoid?.filepath} />
               </div>
             </Link>
@@ -112,13 +112,13 @@ export default function HistoryContent() {
                   {item.videoid.videotitle}
                 </h3>
               </Link>
-              <p className="text-sm text-gray-600">{item.videoid.videochanel}</p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">{item.videoid.videochanel}</p>
+              <p className="text-sm text-muted-foreground">
                 {item.videoid.views.toLocaleString()} views •{" "}
                 {formatDistanceToNow(new Date(item.videoid.createdAt))} ago
               </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Added {formatDistanceToNow(new Date(item.createdAt))} ago
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                Watched {formatDistanceToNow(new Date(item.updatedAt))} ago
               </p>
             </div>
 

@@ -9,7 +9,13 @@ export const handlehistory = async (req, res) => {
     return res.status(400).json({ message: "Invalid video" });
   }
   try {
-    await history.create({ viewer: userId, videoid: videoId });
+    await history.findOneAndUpdate(
+      { viewer: userId, videoid: videoId },
+      {
+        $setOnInsert: { viewer: userId, videoid: videoId },
+      },
+      { upsert: true }
+    );
     await video.findByIdAndUpdate(videoId, { $inc: { views: 1 } });
     return res.status(200).json({ history: true });
   } catch (error) {
@@ -45,6 +51,7 @@ export const getallhistoryVideo = async (req, res) => {
   try {
     const historyvideo = await history
       .find({ viewer: userId })
+      .sort({ updatedAt: -1 })
       .populate({
         path: "videoid",
         model: "videofiles",

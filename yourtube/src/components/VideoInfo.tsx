@@ -142,7 +142,7 @@ const VideoInfo = ({ video }: any) => {
                 {video.videochanel}
               </h3>
             </Link>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-muted-foreground">
               {formatCount(count)} subscribers
             </p>
           </div>
@@ -158,7 +158,7 @@ const VideoInfo = ({ video }: any) => {
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center bg-gray-100 rounded-full">
+          <div className="flex items-center bg-secondary rounded-full">
             <Button
               variant="ghost"
               size="sm"
@@ -168,7 +168,7 @@ const VideoInfo = ({ video }: any) => {
               <ThumbsUp className={`w-4 h-4 ${isLiked ? "fill-black text-black" : ""}`} />
               {likes.toLocaleString()}
             </Button>
-            <div className="w-px h-5 bg-gray-300" />
+            <div className="w-px h-5 bg-border" />
             <Button
               variant="ghost"
               size="sm"
@@ -181,7 +181,7 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="sm"
-            className={`bg-gray-100 rounded-full gap-1.5 text-sm h-9 ${isWatchLater ? "text-primary" : ""}`}
+            className={`bg-secondary rounded-full gap-1.5 text-sm h-9 ${isWatchLater ? "text-primary" : ""}`}
             onClick={handleWatchLater}
           >
             <Clock className="w-4 h-4" />
@@ -190,31 +190,31 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="sm"
-            className="bg-gray-100 rounded-full gap-1.5 text-sm h-9"
+            className="bg-secondary rounded-full gap-1.5 text-sm h-9"
             onClick={handleShare}
           >
             <Share className="w-4 h-4" />
             <span className="hidden sm:inline">Share</span>
           </Button>
-          <Button variant="ghost" size="sm" className="bg-gray-100 rounded-full text-sm h-9 px-3">
+          <Button variant="ghost" size="sm" className="bg-secondary rounded-full text-sm h-9 px-3">
             <Download className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="bg-gray-100 rounded-full h-9 w-9">
+          <Button variant="ghost" size="icon" className="bg-secondary rounded-full h-9 w-9">
             <MoreHorizontal className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      <div className="bg-gray-100 rounded-lg p-4 transition-all duration-200 hover:bg-gray-200/70">
+      <div className="bg-secondary rounded-lg p-4 transition-all duration-200 hover:bg-secondary/70">
         <div className="flex gap-4 text-sm font-medium mb-2">
           <span>{video.views?.toLocaleString()} views</span>
           <span>{formatDistanceToNow(new Date(video.createdAt))} ago</span>
         </div>
-        <div className={`text-sm text-gray-700 ${showFullDescription ? "" : "line-clamp-3"}`}>
+        <div className={`text-sm text-foreground/70 ${showFullDescription ? "" : "line-clamp-3"}`}>
           <p>{video.description || "No description"}</p>
         </div>
         <button
-          className="mt-2 text-sm font-medium text-gray-700 hover:text-black transition-colors"
+          className="mt-2 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors"
           onClick={() => setShowFullDescription(!showFullDescription)}
         >
           {showFullDescription ? "Show less" : "Show more"}

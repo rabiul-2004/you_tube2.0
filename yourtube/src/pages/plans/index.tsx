@@ -153,7 +153,7 @@ const PlansPage = () => {
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold">Choose your plan</h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-muted-foreground mt-2">
             {status?.active
               ? `Current plan: ${status.plan} (valid until ${new Date(
                   status.expiresAt
@@ -163,7 +163,7 @@ const PlansPage = () => {
         </div>
 
         {!user && (
-          <p className="text-center text-sm text-gray-500 mb-6">
+          <p className="text-center text-sm text-muted-foreground mb-6">
             You need to sign in to upgrade. Sign in from the top-right corner.
           </p>
         )}
@@ -175,8 +175,8 @@ const PlansPage = () => {
               className={cn(
                 "relative flex flex-col rounded-xl border p-5",
                 plan.highlighted
-                  ? "border-red-600 bg-red-50/40"
-                  : "border-gray-200 bg-white",
+                  ? "border-red-600 bg-red-500/10 dark:bg-red-500/15"
+                  : "border-border bg-card",
                 isCurrentPlan(plan.name) && "ring-2 ring-red-600"
               )}
             >
@@ -191,16 +191,16 @@ const PlansPage = () => {
                 </span>
               )}
               <h2 className="text-lg font-semibold">{plan.name}</h2>
-              <p className="text-sm text-gray-500">{plan.tagline}</p>
+              <p className="text-sm text-muted-foreground">{plan.tagline}</p>
               <div className="mt-4 mb-4">
                 <span className="text-3xl font-bold">₹{plan.price}</span>
-                <span className="text-sm text-gray-500">/ month</span>
+                <span className="text-sm text-muted-foreground">/ month</span>
               </div>
               <ul className="space-y-2 flex-1">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm">
                     <Check className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
-                    <span className="text-gray-700">{feature}</span>
+                    <span className="text-foreground/80">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -231,7 +231,7 @@ const PlansPage = () => {
           ))}
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-8">
+        <p className="text-center text-xs text-muted-foreground/60 mt-8">
           Payments are processed via Razorpay (test mode). Use test card 4111
           1111 1111 1111 for testing.
         </p>

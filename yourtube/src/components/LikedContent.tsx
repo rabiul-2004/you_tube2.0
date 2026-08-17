@@ -59,7 +59,7 @@ export default function LikedVideosContent() {
         <h2 className="text-xl font-semibold mb-2">
           Keep track of videos you like
         </h2>
-        <p className="text-gray-600">Sign in to see your liked videos.</p>
+        <p className="text-muted-foreground">Sign in to see your liked videos.</p>
       </div>
     );
   }
@@ -73,14 +73,14 @@ export default function LikedVideosContent() {
       <div className="text-center py-12">
         <ThumbsUp className="w-16 h-16 mx-auto text-gray-400 mb-4" />
         <h2 className="text-xl font-semibold mb-2">No liked videos yet</h2>
-        <p className="text-gray-600">Videos you like will appear here.</p>
+        <p className="text-muted-foreground">Videos you like will appear here.</p>
       </div>
     );
   }
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-600">{likedVideos.length} videos</p>
+        <p className="text-sm text-muted-foreground">{likedVideos.length} videos</p>
         <Button className="flex items-center gap-2">
           <Play className="w-4 h-4" />
           Play all
@@ -91,7 +91,7 @@ export default function LikedVideosContent() {
         {likedVideos.filter((item) => item.videoid).map((item) => (
           <div key={item._id} className="flex gap-4 group">
             <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
-              <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden">
+              <div className="relative w-40 aspect-video bg-secondary rounded overflow-hidden">
                 <VideoThumb filepath={item.videoid?.filepath} />
               </div>
             </Link>
@@ -102,14 +102,14 @@ export default function LikedVideosContent() {
                   {item.videoid.videotitle}
                 </h3>
               </Link>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {item.videoid.videochanel}
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {item.videoid.views.toLocaleString()} views •{" "}
                 {formatDistanceToNow(new Date(item.videoid.createdAt))} ago
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground/70 mt-1">
                 Liked {formatDistanceToNow(new Date(item.createdAt))} ago
               </p>
             </div>

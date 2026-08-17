@@ -42,7 +42,7 @@ const ChannelPage = () => {
   const isOwner = user && channel && user._id === channel._id;
 
   return (
-    <div className="flex-1 min-h-screen bg-white animate-fade-in">
+    <div className="flex-1 min-h-screen bg-background animate-fade-in">
       <div className="max-w-full mx-auto">
         {loading ? (
           <div className="animate-pulse p-6">

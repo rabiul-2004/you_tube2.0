@@ -1,4 +1,4 @@
-import { Bell, Crown, Menu, Mic, Search, User, VideoIcon, X } from "lucide-react";
+import { Bell, Crown, Menu, Mic, Search, Sun, Moon, User, VideoIcon, X } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/button";
 import Link from "next/link";
@@ -18,6 +18,7 @@ import { useUser } from "@/lib/AuthContext";
 import { hasActivePaidPlan } from "@/lib/planUtils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useTheme } from "next-themes";
 
 const Header = ({
   onMenuClick,
@@ -25,6 +26,8 @@ const Header = ({
   onMenuClick: () => void;
 }) => {
   const { user, logout, emailVerified, sendverificationemail } = useUser();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isdialogeopen, setisdialogeopen] = useState(false);
@@ -43,13 +46,17 @@ const Header = ({
   };
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [isSearchOpen]);
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b safe-area-top">
+    <header className="sticky top-0 z-40 bg-background border-b safe-area-top">
       {isSearchOpen && (
         <div className="sm:hidden flex items-center gap-2 px-3 h-14">
           <Button
@@ -74,7 +81,7 @@ const Header = ({
             />
             <Button
               type="submit"
-              className="rounded-r-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-l-0 h-9 px-4 flex-shrink-0"
+              className="rounded-r-full bg-secondary hover:bg-accent text-muted-foreground border border-l-0 h-9 px-4 flex-shrink-0"
               aria-label="Submit search"
             >
               <Search className="w-4 h-4" />
@@ -106,7 +113,7 @@ const Header = ({
               </svg>
             </div>
             <span className="text-lg font-medium hidden sm:inline">YourTube</span>
-            <span className="text-[10px] text-gray-400 ml-0.5 hidden sm:inline">IN</span>
+            <span className="text-[10px] text-muted-foreground ml-0.5 hidden sm:inline">IN</span>
           </Link>
         </div>
 
@@ -126,7 +133,7 @@ const Header = ({
             />
             <Button
               type="submit"
-              className="rounded-r-full bg-gray-50 hover:bg-gray-100 text-gray-600 border border-l-0 h-9 px-4 sm:px-6 flex-shrink-0"
+              className="rounded-r-full bg-secondary hover:bg-accent text-muted-foreground border border-l-0 h-9 px-4 sm:px-6 flex-shrink-0"
               aria-label="Submit search"
             >
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -154,6 +161,19 @@ const Header = ({
               <Search className="w-5 h-5" />
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 h-9 w-9 touch-target"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            aria-label="Toggle theme"
+          >
+            {mounted && theme === "dark" ? (
+              <Sun className="w-5 h-5" />
+            ) : (
+              <Moon className="w-5 h-5" />
+            )}
+          </Button>
           {user ? (
             <>
               <Button
@@ -187,10 +207,10 @@ const Header = ({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <div className="flex items-center justify-between px-2 py-2 border-b">
-                    <span className="text-xs text-gray-500">Plan</span>
+                    <span className="text-xs text-muted-foreground">Plan</span>
                     <Link
                       href="/plans"
-                      className="flex items-center gap-1 text-sm font-medium touch-target py-1 px-2 rounded-lg hover:bg-gray-100"
+                      className="flex items-center gap-1 text-sm font-medium touch-target py-1 px-2 rounded-lg hover:bg-accent"
                     >
                       <Crown className="w-4 h-4 text-amber-500" />
                       {hasActivePaidPlan(user) ? user.plan : "Upgrade"}

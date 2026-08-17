@@ -65,8 +65,8 @@ const Videogrid = () => {
       ) : (
         <div className="col-span-full text-center py-16">
           <div className="text-6xl mb-4">🎬</div>
-          <h3 className="text-lg font-medium text-gray-600">No videos yet</h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <h3 className="text-lg font-medium text-muted-foreground">No videos yet</h3>
+          <p className="text-sm text-muted-foreground/70 mt-1">
             Upload a video to get started
           </p>
         </div>

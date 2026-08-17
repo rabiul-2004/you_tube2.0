@@ -24,15 +24,15 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
             href={`/watch/${video._id}`}
             className="flex gap-2 group"
           >
-            <div className="relative w-40 aspect-video bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+            <div className="relative w-40 aspect-video bg-secondary rounded-lg overflow-hidden flex-shrink-0">
               <VideoThumb filepath={video?.filepath} />
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="font-medium text-sm line-clamp-2 leading-5 group-hover:text-blue-600 transition-colors">
                 {video.videotitle}
               </h4>
-              <p className="text-xs text-gray-600 mt-1">{video.videochanel}</p>
-              <p className="text-xs text-gray-600 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-1">{video.videochanel}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {video.views?.toLocaleString()} views •{" "}
                 {formatDistanceToNow(new Date(video.createdAt))} ago
               </p>
@@ -40,7 +40,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
           </Link>
         ))
       ) : (
-        <p className="text-sm text-gray-500 px-1">No related videos</p>
+        <p className="text-sm text-muted-foreground/70 px-1">No related videos</p>
       )}
     </div>
   );

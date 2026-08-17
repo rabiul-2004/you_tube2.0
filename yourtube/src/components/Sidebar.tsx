@@ -39,8 +39,8 @@ const Sidebar = ({
             className={cn(
               "flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 group touch-target",
               router.pathname === item.href
-                ? "bg-gray-100 font-medium"
-                : "hover:bg-gray-100"
+                ? "bg-accent font-medium"
+                : "hover:bg-accent"
             )}
           >
             <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -60,7 +60,7 @@ const Sidebar = ({
             key={item.label}
             href={item.href}
             onClick={onClose}
-            className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100 touch-target"
+            className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-accent touch-target"
           >
             <item.icon className="w-5 h-5 flex-shrink-0" />
             <span className="text-sm">{item.label}</span>
@@ -69,7 +69,7 @@ const Sidebar = ({
         <Link
           href="/plans"
           onClick={onClose}
-          className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100 touch-target"
+          className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-accent touch-target"
         >
           <Crown className="w-5 h-5 flex-shrink-0 text-amber-500" />
           <span className="text-sm font-medium">Upgrade / Plans</span>
@@ -79,7 +79,7 @@ const Sidebar = ({
             <Link
               href="/your-videos"
               onClick={onClose}
-              className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100 touch-target"
+              className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-accent touch-target"
             >
               <PlaySquare className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">Your videos</span>
@@ -88,7 +88,7 @@ const Sidebar = ({
         )}
         <button
           onClick={() => setShowMore(!showMore)}
-          className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100 w-full touch-target"
+          className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-accent w-full touch-target"
         >
           <ChevronDown
             className={cn(
@@ -112,7 +112,7 @@ const Sidebar = ({
               key={item}
               href="/"
               onClick={onClose}
-              className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-gray-100 touch-target"
+              className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-accent touch-target"
             >
               <span className="text-sm">{item}</span>
             </Link>
@@ -120,7 +120,7 @@ const Sidebar = ({
         )}
       </div>
 
-      <div className="p-4 text-xs text-gray-500 space-y-1">
+      <div className="p-4 text-xs text-muted-foreground space-y-1">
         <p>About Press Copyright</p>
         <p>Contact us Creators Advertise</p>
         <p>Developers</p>
@@ -134,7 +134,7 @@ const Sidebar = ({
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "hidden md:block w-60 flex-shrink-0 border-r bg-white h-[calc(100vh-57px)] sticky top-[57px] overflow-hidden transition-all duration-300",
+          "hidden md:block w-60 flex-shrink-0 border-r bg-sidebar h-[calc(100vh-57px)] sticky top-[57px] overflow-hidden transition-all duration-300",
           !isOpen && "md:hidden"
         )}
       >
@@ -149,7 +149,7 @@ const Sidebar = ({
         >
           <div className="absolute inset-0 bg-black/50 animate-fade-in" />
           <aside
-            className="relative w-72 h-full bg-white shadow-xl animate-slide-left overflow-hidden safe-area-top safe-area-bottom"
+            className="relative w-72 h-full bg-sidebar shadow-xl animate-slide-left overflow-hidden safe-area-top safe-area-bottom"
             onClick={(e) => e.stopPropagation()}
           >
             {content}

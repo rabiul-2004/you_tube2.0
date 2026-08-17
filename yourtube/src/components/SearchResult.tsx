@@ -49,8 +49,8 @@ const SearchResult = ({ query }: any) => {
   if (!query?.trim()) {
     return (
       <div className="text-center py-16 animate-fade-up">
-        <SearchX className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-        <p className="text-gray-500">Enter a search term to find videos and channels.</p>
+        <SearchX className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+        <p className="text-muted-foreground">Enter a search term to find videos and channels.</p>
       </div>
     );
   }
@@ -75,9 +75,9 @@ const SearchResult = ({ query }: any) => {
   if (!videos || videos.length === 0) {
     return (
       <div className="text-center py-16 animate-fade-up">
-        <SearchX className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+        <SearchX className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
         <h2 className="text-xl font-semibold mb-2">No results found</h2>
-        <p className="text-gray-500">Try different keywords or remove search filters</p>
+        <p className="text-muted-foreground">Try different keywords or remove search filters</p>
       </div>
     );
   }
@@ -88,7 +88,7 @@ const SearchResult = ({ query }: any) => {
         {videos.map((video: any) => (
           <div key={video._id} className="flex flex-col sm:flex-row gap-4 group">
             <Link href={`/watch/${video._id}`} className="flex-shrink-0">
-              <div className="relative w-full sm:w-80 aspect-video bg-gray-100 rounded-lg overflow-hidden">
+              <div className="relative w-full sm:w-80 aspect-video bg-secondary rounded-lg overflow-hidden">
                 <VideoThumb filepath={video.filepath} />
               </div>
             </Link>
@@ -100,7 +100,7 @@ const SearchResult = ({ query }: any) => {
                 </h3>
               </Link>
 
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                 <span>{video.views?.toLocaleString() || 0} views</span>
                 <span>•</span>
                 <span>{formatDistanceToNow(new Date(video.createdAt))} ago</span>
@@ -114,7 +114,7 @@ const SearchResult = ({ query }: any) => {
                   <AvatarImage src="/placeholder.svg?height=24&width=24" />
                   <AvatarFallback className="text-xs">{video.videochanel?.[0]}</AvatarFallback>
                 </Avatar>
-                <span className="text-sm text-gray-600">{video.videochanel}</span>
+                <span className="text-sm text-muted-foreground">{video.videochanel}</span>
               </Link>
             </div>
           </div>
@@ -122,7 +122,7 @@ const SearchResult = ({ query }: any) => {
       </div>
 
       <div className="text-center py-8 border-t">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Showing {videos.length} result{videos.length !== 1 ? "s" : ""} for &ldquo;{query}&rdquo;
         </p>
       </div>

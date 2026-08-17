@@ -32,7 +32,7 @@ const ChannelHeader = ({ channel, videoCount, onEditChannel }: any) => {
             <h1 className="text-xl sm:text-3xl lg:text-4xl font-bold">
               {channel?.channelname || "Your Channel"}
             </h1>
-            <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <span>@{channel?.channelname?.toLowerCase().replace(/\s+/g, "") || "channel"}</span>
               <span>•</span>
               <span>{formatCount(count)} subscribers</span>
@@ -40,7 +40,7 @@ const ChannelHeader = ({ channel, videoCount, onEditChannel }: any) => {
               <span>{videoCount || 0} videos</span>
             </div>
             {channel?.description && (
-              <p className="text-sm text-gray-700 max-w-2xl line-clamp-2">
+              <p className="text-sm text-foreground/70 max-w-2xl line-clamp-2">
                 {channel.description}
               </p>
             )}
@@ -49,7 +49,7 @@ const ChannelHeader = ({ channel, videoCount, onEditChannel }: any) => {
           {user && isOwner ? (
             <Button
               variant="outline"
-              className="shrink-0 transition-all duration-200 bg-white border-gray-300 hover:bg-gray-100"
+              className="shrink-0 transition-all duration-200 bg-background border-border hover:bg-accent"
               onClick={onEditChannel}
             >
               <Settings className="w-4 h-4 mr-1.5" />
@@ -63,7 +63,7 @@ const ChannelHeader = ({ channel, videoCount, onEditChannel }: any) => {
                 variant={subscribed ? "outline" : "default"}
                 className={`shrink-0 transition-all duration-200 ${
                   subscribed
-                    ? "bg-gray-100 hover:bg-gray-200 border-gray-300"
+                    ? "bg-accent hover:bg-accent border-border"
                     : "bg-black text-white hover:bg-black/90"
                 }`}
               >

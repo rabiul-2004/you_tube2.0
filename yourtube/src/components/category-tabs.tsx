@@ -64,10 +64,10 @@ export default function CategoryTabs() {
       {showLeftShadow && (
         <button
           onClick={scrollLeft}
-          className="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-white to-transparent flex items-center justify-center z-10 touch-target -ml-2 md:hidden"
+          className="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-background to-transparent flex items-center justify-center z-10 touch-target -ml-2 md:hidden"
           aria-label="Scroll categories left"
         >
-          <ChevronLeft className="w-5 h-5 text-gray-600" />
+          <ChevronLeft className="w-5 h-5 text-muted-foreground" />
         </button>
       )}
       <div
@@ -83,8 +83,8 @@ export default function CategoryTabs() {
             className={cn(
               "whitespace-nowrap shrink-0 transition-all duration-200 text-sm",
               activeCategory === category
-                ? "bg-black text-white hover:bg-black/90"
-                : "bg-gray-100 hover:bg-gray-200 text-black"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "bg-secondary hover:bg-accent text-foreground"
             )}
             onClick={() => setActiveCategory(category)}
             aria-pressed={activeCategory === category}
@@ -96,10 +96,10 @@ export default function CategoryTabs() {
       {showRightShadow && (
         <button
           onClick={scrollRight}
-          className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white to-transparent flex items-center justify-center z-10 touch-target -mr-2 md:hidden"
+          className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent flex items-center justify-center z-10 touch-target -mr-2 md:hidden"
           aria-label="Scroll categories right"
         >
-          <ChevronRight className="w-5 h-5 text-gray-600" />
+          <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </button>
       )}
     </div>

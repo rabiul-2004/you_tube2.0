@@ -91,9 +91,9 @@ export default function LibraryContent() {
   if (!user) {
     return (
       <div className="text-center py-12 animate-fade-up">
-        <Library className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+        <Library className="w-16 h-16 mx-auto text-muted-foreground/70 mb-4" />
         <h2 className="text-xl font-semibold mb-2">Your library</h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Sign in to see your history, liked videos, watch later and uploads.
         </p>
       </div>
@@ -106,16 +106,16 @@ export default function LibraryContent() {
         <Link
           key={item.label}
           href={item.href}
-          className="group flex items-center gap-4 p-4 border rounded-xl hover:bg-gray-50 transition-all duration-200 animate-fade-up"
+          className="group flex items-center gap-4 p-4 border rounded-xl hover:bg-accent transition-all duration-200 animate-fade-up"
         >
-          <div className="bg-gray-100 group-hover:bg-gray-200 rounded-full p-3">
-            <item.icon className="w-6 h-6 text-gray-700" />
+          <div className="bg-secondary group-hover:bg-accent rounded-full p-3">
+            <item.icon className="w-6 h-6 text-foreground/70" />
           </div>
           <div className="min-w-0">
             <h3 className="font-medium text-sm group-hover:text-blue-600 transition-colors">
               {item.label}
             </h3>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-muted-foreground">
               {loading ? "..." : item.count === null ? "Open channel" : `${item.count} ${item.count === 1 ? "item" : "items"}`}
             </p>
           </div>
