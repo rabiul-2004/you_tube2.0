@@ -16,10 +16,27 @@ import { useEffect, useContext, useRef } from "react";
 
 const UserContext = createContext();
 
+const getDeviceFingerprint = () => {
+  if (typeof navigator === "undefined") return null;
+  return `${navigator.userAgent.slice(0, 50)}`;
+};
+
+const getClientInfo = async () => {
+  try {
+    const res = await axiosInstance.get("/user/location");
+    return res.data;
+  } catch {
+    return {};
+  }
+};
+
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [signingIn, setSigningIn] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
+  const [otpRequired, setOtpRequired] = useState(false);
+  const [otpUserId, setOtpUserId] = useState(null);
+  const [otpMessage, setOtpMessage] = useState("");
   const userRef = useRef(null);
 
   const login = (userdata) => {
@@ -35,6 +52,8 @@ export const UserProvider = ({ children }) => {
   const logout = async () => {
     userRef.current = null;
     setUser(null);
+    setOtpRequired(false);
+    setOtpUserId(null);
     localStorage.removeItem("user");
     try {
       await signOut(auth);
@@ -44,13 +63,62 @@ export const UserProvider = ({ children }) => {
   };
 
   const syncWithBackend = async (firebaseuser) => {
+    const device = getDeviceFingerprint();
+    const location = await getClientInfo();
     const payload = {
       email: firebaseuser.email,
       name: firebaseuser.displayName,
       image: firebaseuser.photoURL || "https://github.com/shadcn.png",
+      city: location.city || null,
+      state: location.state || null,
+      device,
     };
     const response = await axiosInstance.post("/user/login", payload);
-    login(response.data.result);
+
+    if (response.data.otpRequired) {
+      setOtpRequired(true);
+      setOtpUserId(response.data.result._id);
+      setOtpMessage(response.data.message || "OTP sent to your email.");
+      return;
+    }
+
+    const result = response.data.result;
+    if (result.theme) {
+      applyTheme(result.theme);
+    }
+    login(result);
+  };
+
+  const applyTheme = (theme) => {
+    if (typeof window === "undefined") return;
+    const root = document.documentElement;
+    if (theme === "auto") {
+      const hour = new Date().getHours();
+      const isISTLight = hour >= 10 && hour < 12;
+      root.classList.toggle("dark", !isISTLight);
+    } else {
+      root.classList.toggle("dark", theme === "dark");
+    }
+  };
+
+  const verifyOtp = async (otp) => {
+    const device = getDeviceFingerprint();
+    const location = await getClientInfo();
+    const response = await axiosInstance.post("/user/verify-otp", {
+      userId: otpUserId,
+      otp,
+      city: location.city || null,
+      state: location.state || null,
+      device,
+    });
+    const result = response.data.result;
+    setOtpRequired(false);
+    setOtpUserId(null);
+    if (result.theme) {
+      applyTheme(result.theme);
+    }
+    login(result);
+    return true;
   };
 
   const handlegooglesignin = async () => {
@@ -136,6 +204,10 @@ export const UserProvider = ({ children }) => {
         sendverificationemail,
         emailVerified,
         signingIn,
+        otpRequired,
+        otpMessage,
+        verifyOtp,
+        applyTheme,
       }}
     >
       {children}

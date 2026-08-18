@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import crypto from "crypto";
 
 const getTransporter = () => {
   return nodemailer.createTransport({
@@ -9,6 +10,46 @@ const getTransporter = () => {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+  });
+};
+
+export const generateOTP = () => {
+  return crypto.randomInt(100000, 999999).toString();
+};
+
+export const sendOtpEmail = async ({ to, name, otp, city, state }) => {
+  if (
+    !process.env.SMTP_HOST ||
+    !process.env.SMTP_USER ||
+    !process.env.SMTP_PASS
+  ) {
+    throw new Error("SMTP config missing in server/.env");
+  }
+
+  const location = [city, state].filter(Boolean).join(", ");
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+      <div style="background:#dc2626;padding:20px;text-align:center">
+        <span style="color:#fff;font-size:22px;font-weight:bold">YourTube</span>
+      </div>
+      <div style="padding:24px">
+        <h2 style="margin:0 0 8px">New sign-in detected</h2>
+        <p style="color:#4b5563">Hi ${name || "there"}, we noticed a login from a new device or location${location ? ` (${location})` : ""}.</p>
+        <p style="color:#4b5563">Use the following OTP to complete your login:</p>
+        <div style="text-align:center;margin:24px 0">
+          <span style="display:inline-block;font-size:32px;font-weight:bold;letter-spacing:8px;color:#dc2626;background:#fef2f2;padding:12px 24px;border-radius:8px">${otp}</span>
+        </div>
+        <p style="color:#9ca3af;font-size:12px">This OTP expires in 10 minutes. If you did not attempt to log in, please secure your account immediately.</p>
+      </div>
+    </div>
+  `;
+
+  await getTransporter().sendMail({
+    from: process.env.MAIL_FROM || "YourTube <noreply@yourtube.dev>",
+    to,
+    subject: `YourTube — OTP for new device verification`,
+    html,
   });
 };
 

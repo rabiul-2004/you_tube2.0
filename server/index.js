@@ -10,6 +10,7 @@ import historyrroutes from "./routes/history.js";
 import commentroutes from "./routes/comment.js";
 import planroutes from "./routes/plan.js";
 import subscriberoutes from "./routes/subscribe.js";
+import locationroutes from "./controllers/location.js";
 dotenv.config();
 const app = express();
 import path from "path";
@@ -22,6 +23,7 @@ app.get("/", (req, res) => {
   res.send("You tube backend is working");
 });
 
+app.use("/user/location", locationroutes);
 app.use("/user", userroutes);
 app.use("/video", videoroutes);
 app.use("/like", likeroutes);

@@ -18,16 +18,16 @@ import { useUser } from "@/lib/AuthContext";
 import { hasActivePaidPlan } from "@/lib/planUtils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useTheme } from "next-themes";
+import axiosInstance from "@/lib/axiosinstance";
 
 const Header = ({
   onMenuClick,
 }: {
   onMenuClick: () => void;
 }) => {
-  const { user, logout, emailVerified, sendverificationemail } = useUser();
-  const { theme, setTheme } = useTheme();
+  const { user, logout, emailVerified, sendverificationemail, applyTheme } = useUser();
   const [mounted, setMounted] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">("dark");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isdialogeopen, setisdialogeopen] = useState(false);
@@ -47,6 +47,8 @@ const Header = ({
 
   useEffect(() => {
     setMounted(true);
+    const root = document.documentElement;
+    setCurrentTheme(root.classList.contains("light") ? "light" : "dark");
   }, []);
 
   useEffect(() => {
@@ -54,6 +56,20 @@ const Header = ({
       searchInputRef.current.focus();
     }
   }, [isSearchOpen]);
+
+  const handleThemeToggle = async () => {
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    setCurrentTheme(newTheme);
+    applyTheme(newTheme);
+
+    if (user?._id) {
+      try {
+        await axiosInstance.put(`/user/theme/${user._id}`, { theme: newTheme });
+      } catch (err) {
+        console.error("Failed to save theme:", err);
+      }
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-background border-b safe-area-top">
@@ -165,10 +181,10 @@ const Header = ({
             variant="ghost"
             size="icon"
             className="shrink-0 h-9 w-9 touch-target"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            onClick={handleThemeToggle}
             aria-label="Toggle theme"
           >
-            {mounted && theme === "dark" ? (
+            {mounted && currentTheme === "dark" ? (
               <Sun className="w-5 h-5" />
             ) : (
               <Moon className="w-5 h-5" />
