@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { BASE_URL } from "@/lib/axiosinstance";
+import { getVideoUrl } from "@/lib/cloudinary";
 import { formatDuration } from "@/lib/videoUtils";
 import { useState, useRef, useEffect } from "react";
 
@@ -54,7 +54,7 @@ export default function VideoCard({ video }: any) {
             <>
               <video
                 ref={videoRef}
-                src={`${BASE_URL}/${video?.filepath}`}
+                src={getVideoUrl(video?.filepath)}
                 className={`object-cover w-full h-full min-w-0 group-hover:scale-105 transition-transform duration-500 ${
                   loaded ? "opacity-100" : "opacity-0"
                 }`}

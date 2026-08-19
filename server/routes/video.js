@@ -6,13 +6,14 @@ import {
   uploadvideo,
   updatevideo,
   deletevideo,
+  getUploadSignature,
 } from "../controllers/video.js";
-import upload from "../filehelper/filehelper.js";
 import { requireAuth, requireVerified } from "../middleware/auth.js";
 
 const routes = express.Router();
 
-routes.post("/upload", requireAuth, requireVerified, upload.single("file"), uploadvideo);
+routes.post("/upload-signature", requireAuth, getUploadSignature);
+routes.post("/upload", requireAuth, requireVerified, uploadvideo);
 routes.get("/getall", getallvideo);
 routes.get("/channel/:channelId", getvideoByChannel);
 routes.patch("/:id", requireAuth, updatevideo);

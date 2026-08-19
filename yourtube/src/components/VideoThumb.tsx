@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { BASE_URL } from "@/lib/axiosinstance";
+import { getVideoUrl } from "@/lib/cloudinary";
 import { formatDuration } from "@/lib/videoUtils";
 
 export default function VideoThumb({ filepath }: { filepath?: string }) {
@@ -18,7 +18,7 @@ export default function VideoThumb({ filepath }: { filepath?: string }) {
     <div className="relative w-full h-full">
       {!error ? (
         <video
-          src={`${BASE_URL}/${filepath}`}
+          src={getVideoUrl(filepath)}
           className={`object-cover w-full h-full transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
           onLoadedData={() => setLoaded(true)}
           onLoadedMetadata={handleLoadedMetadata}

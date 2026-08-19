@@ -1,38 +1,46 @@
 import mongoose from "mongoose";
-import path from "path";
-import { unlink } from "fs/promises";
 import video from "../Modals/video.js";
 import like from "../Modals/like.js";
 import dislike from "../Modals/dislike.js";
 import comment from "../Modals/comment.js";
 import watchlater from "../Modals/watchlater.js";
 import history from "../Modals/history.js";
+import { generateVideoSignature, deleteFromCloudinary } from "../helpers/cloudinary.js";
 
-export const uploadvideo = async (req, res) => {
-  if (req.file === undefined) {
-    return res
-      .status(404)
-      .json({ message: "plz upload a mp4 video file only" });
-  } else {
-    try {
-      const file = new video({
-        videotitle: req.body.videotitle,
-        filename: req.file.originalname,
-        filepath: req.file.path.split(path.sep).join("/"),
-        filetype: req.file.mimetype,
-        filesize: req.file.size,
-        videochanel: req.user.channelname || req.user.name || "",
-        uploader: req.user._id.toString(),
-        isPremium: req.body.isPremium === "true" || req.body.isPremium === true,
-      });
-      await file.save();
-      return res.status(201).json({ message: "File uploaded successfully" });
-    } catch (error) {
-      console.error(" error:", error);
-      return res.status(500).json({ message: "Something went wrong" });
-    }
+export const getUploadSignature = async (req, res) => {
+  try {
+    const sig = generateVideoSignature();
+    return res.status(200).json(sig);
+  } catch (error) {
+    console.error("Signature error:", error);
+    return res.status(500).json({ message: "Failed to generate upload signature" });
   }
 };
+
+export const uploadvideo = async (req, res) => {
+  const { videotitle, videochanel, uploader, isPremium, filepath, filename, filetype, filesize } = req.body;
+  if (!filepath || !filepath.startsWith("http")) {
+    return res.status(400).json({ message: "Invalid video URL" });
+  }
+  try {
+    const file = new video({
+      videotitle,
+      filename: filename || "video",
+      filepath,
+      filetype: filetype || "video/mp4",
+      filesize: filesize || "0",
+      videochanel: req.user.channelname || req.user.name || videochanel || "",
+      uploader: req.user._id.toString(),
+      isPremium: isPremium === "true" || isPremium === true,
+    });
+    await file.save();
+    return res.status(201).json({ message: "File uploaded successfully" });
+  } catch (error) {
+    console.error(" error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
 export const getallvideo = async (req, res) => {
   try {
     const files = await video.find();
@@ -42,6 +50,7 @@ export const getallvideo = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 export const getvideobyid = async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -58,6 +67,7 @@ export const getvideobyid = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 export const getvideoByChannel = async (req, res) => {
   const { channelId } = req.params;
   if (!mongoose.Types.ObjectId.isValid(channelId)) {
@@ -73,6 +83,7 @@ export const getvideoByChannel = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 export const updatevideo = async (req, res) => {
   const { id } = req.params;
   const { videotitle, isPremium } = req.body;
@@ -104,6 +115,7 @@ export const updatevideo = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 export const deletevideo = async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -119,13 +131,7 @@ export const deletevideo = async (req, res) => {
         .status(403)
         .json({ message: "You can only delete your own videos" });
     }
-    try {
-      if (file.filepath) {
-        await unlink(file.filepath);
-      }
-    } catch (err) {
-      console.error(" file delete error:", err);
-    }
+    await deleteFromCloudinary(file.filepath);
     await video.findByIdAndDelete(id);
     await like.deleteMany({ videoid: id });
     await dislike.deleteMany({ videoid: id });

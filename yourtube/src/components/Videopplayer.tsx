@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import { BASE_URL } from "@/lib/axiosinstance";
+import { getVideoUrl } from "@/lib/cloudinary";
 import { formatDuration } from "@/lib/videoUtils";
 import {
   Play,
@@ -306,7 +306,7 @@ export default function VideoPlayer({
         key={video?._id}
         ref={videoRef}
         className="w-full h-full object-contain"
-        src={`${BASE_URL}/${video?.filepath}`}
+        src={getVideoUrl(video?.filepath)}
         playsInline
         muted
         onClick={togglePlay}

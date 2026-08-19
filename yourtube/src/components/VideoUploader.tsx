@@ -7,6 +7,7 @@ import { Label } from "./ui/label";
 import { Progress } from "./ui/progress";
 import axiosInstance from "@/lib/axiosinstance";
 import { useUser } from "@/lib/AuthContext";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 const VideoUploader = ({ channelId, channelName }: any) => {
   const { user, emailVerified } = useUser();
@@ -62,29 +63,38 @@ const VideoUploader = ({ channelId, channelName }: any) => {
       toast.error("Please provide file and title");
       return;
     }
-    const formdata = new FormData();
-    formdata.append("file", videoFile);
-    formdata.append("videotitle", videoTitle);
-    formdata.append("videochanel", channelName);
-    formdata.append("uploader", channelId);
-    formdata.append("isPremium", String(isPremium));
     const controller = new AbortController();
     abortRef.current = controller;
     try {
       setIsUploading(true);
       setUploadProgress(0);
-      await axiosInstance.post("/video/upload", formdata, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+
+      const { data: sig } = await axiosInstance.post("/video/upload-signature");
+      setUploadProgress(10);
+
+      const cloudinaryUrl = await uploadToCloudinary(
+        videoFile,
+        sig,
+        (pct) => setUploadProgress(10 + Math.round(pct * 0.8))
+      );
+      setUploadProgress(90);
+
+      await axiosInstance.post(
+        "/video/upload",
+        {
+          videotitle: videoTitle,
+          videochanel: channelName,
+          uploader: channelId,
+          isPremium: String(isPremium),
+          filepath: cloudinaryUrl,
+          filename: videoFile.name,
+          filetype: videoFile.type,
+          filesize: String(videoFile.size),
         },
-        signal: controller.signal,
-        onUploadProgress: (progresEvent: any) => {
-          const progress = Math.round(
-            (progresEvent.loaded * 100) / progresEvent.total
-          );
-          setUploadProgress(progress);
-        },
-      });
+        { signal: controller.signal }
+      );
+      setUploadProgress(100);
+
       toast.success("Upload successful");
       resetForm();
     } catch (error: any) {
