@@ -18,7 +18,7 @@ export const getUploadSignature = async (req, res) => {
 };
 
 export const uploadvideo = async (req, res) => {
-  const { videotitle, videochanel, uploader, isPremium, filepath, filename, filetype, filesize } = req.body;
+  const { videotitle, videochanel, uploader, isPremium, filepath, filename, filetype, filesize, duration } = req.body;
   if (!filepath || !filepath.startsWith("http")) {
     return res.status(400).json({ message: "Invalid video URL" });
   }
@@ -32,6 +32,7 @@ export const uploadvideo = async (req, res) => {
       videochanel: req.user.channelname || req.user.name || videochanel || "",
       uploader: req.user._id.toString(),
       isPremium: isPremium === "true" || isPremium === true,
+      duration: Number(duration) || 0,
     });
     await file.save();
     return res.status(201).json({ message: "File uploaded successfully" });

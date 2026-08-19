@@ -12,6 +12,7 @@ const videochema = mongoose.Schema(
     views: { type: Number, default: 0 },
     uploader: { type: String },
     isPremium: { type: Boolean, default: false },
+    duration: { type: Number, default: 0 },
   },
   {
     timestamps: true,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -35,19 +35,26 @@ const VideoInfo = ({ video }: any) => {
     setIsDisliked(false);
   }, [video._id]);
 
+  const viewCountedRef = useRef<string | null>(null);
   useEffect(() => {
-    const handleviews = async () => {
-      try {
-        if (user) {
-          await axiosInstance.post(`/history/${video._id}`, {
-            userId: user?._id,
-          });
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    handleviews();
+    if (!user || !video._id) return;
+    if (viewCountedRef.current === video._id) return;
+
+    const cooldownKey = `viewCooldown:${video._id}`;
+    const lastView = localStorage.getItem(cooldownKey);
+    const cooldownMs = Math.max((video.duration || 0), 30) * 1000;
+    if (lastView && cooldownMs > 0 && Date.now() - Number(lastView) < cooldownMs) {
+      viewCountedRef.current = video._id;
+      return;
+    }
+
+    viewCountedRef.current = video._id;
+    axiosInstance
+      .post(`/history/${video._id}`, { userId: user._id })
+      .then(() => {
+        localStorage.setItem(cooldownKey, String(Date.now()));
+      })
+      .catch((error) => console.log(error));
   }, [user?._id, video._id]);
 
   const handleLike = async () => {

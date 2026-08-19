@@ -221,7 +221,7 @@ const Header = ({
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuContent className="w-56" align="end">
                   <div className="flex items-center justify-between px-2 py-2 border-b">
                     <span className="text-xs text-muted-foreground">Plan</span>
                     <Link

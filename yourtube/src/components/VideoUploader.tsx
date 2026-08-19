@@ -17,6 +17,7 @@ const VideoUploader = ({ channelId, channelName }: any) => {
   const [videoTitle, setVideoTitle] = useState("");
   const [isPremium, setIsPremium] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const handlefilechange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -36,6 +37,14 @@ const VideoUploader = ({ channelId, channelName }: any) => {
       if (!videoTitle) {
         setVideoTitle(filename);
       }
+      const url = URL.createObjectURL(file);
+      const el = document.createElement("video");
+      el.preload = "metadata";
+      el.onloadedmetadata = () => {
+        setVideoDuration(Math.round(el.duration));
+        URL.revokeObjectURL(url);
+      };
+      el.src = url;
     }
   };
   const resetForm = () => {
@@ -45,6 +54,7 @@ const VideoUploader = ({ channelId, channelName }: any) => {
     setIsUploading(false);
     setUploadProgress(0);
     setUploadComplete(false);
+    setVideoDuration(0);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -90,6 +100,7 @@ const VideoUploader = ({ channelId, channelName }: any) => {
           filename: videoFile.name,
           filetype: videoFile.type,
           filesize: String(videoFile.size),
+          duration: String(videoDuration),
         },
         { signal: controller.signal }
       );
