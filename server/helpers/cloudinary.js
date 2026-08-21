@@ -29,15 +29,21 @@ export function generateVideoSignature() {
   };
 }
 
+export function extractPublicId(filepath) {
+  if (!filepath || !filepath.startsWith("http")) return null;
+  const parts = filepath.split("/");
+  const uploadIdx = parts.indexOf("upload");
+  if (uploadIdx === -1) return null;
+  let rest = parts.slice(uploadIdx + 1);
+  if (rest.length && /^v\d+$/.test(rest[0])) rest = rest.slice(1);
+  return rest.join("/").replace(/\.[^.]+$/, "");
+}
+
 export async function deleteFromCloudinary(filepath) {
   ensureConfig();
-  if (!filepath || !filepath.startsWith("http")) return null;
+  const publicId = extractPublicId(filepath);
+  if (!publicId) return null;
   try {
-    const parts = filepath.split("/");
-    const uploadIdx = parts.indexOf("upload");
-    if (uploadIdx === -1) return null;
-    const publicIdWithExt = parts.slice(uploadIdx + 1).join("/");
-    const publicId = publicIdWithExt.replace(/\.[^.]+$/, "");
     const result = await cloudinary.uploader.destroy(publicId, {
       resource_type: "video",
     });
