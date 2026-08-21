@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Home, Compass, Clock, ThumbsUp, PlaySquare, Clock4, Library, ChevronDown, Crown } from "lucide-react";
+import { Home, Compass, Clock, ThumbsUp, PlaySquare, Clock4, Library, ChevronDown, Crown, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
@@ -16,6 +16,7 @@ const youItems = [
   { icon: Clock, label: "History", href: "/history" },
   { icon: ThumbsUp, label: "Liked videos", href: "/liked" },
   { icon: Clock4, label: "Watch later", href: "/watch-later" },
+  { icon: Download, label: "Downloads", href: "/downloads" },
 ];
 
 const Sidebar = ({

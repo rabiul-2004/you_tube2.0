@@ -10,6 +10,7 @@ import historyrroutes from "./routes/history.js";
 import commentroutes from "./routes/comment.js";
 import planroutes from "./routes/plan.js";
 import subscriberoutes from "./routes/subscribe.js";
+import downloadroutes from "./routes/download.js";
 import locationroutes from "./controllers/location.js";
 dotenv.config();
 const app = express();
@@ -32,6 +33,7 @@ app.use("/history", historyrroutes);
 app.use("/comment", commentroutes);
 app.use("/plan", planroutes);
 app.use("/subscribe", subscriberoutes);
+app.use("/download", downloadroutes);
 const PORT = process.env.PORT || 5000;
 const DBURL = process.env.DB_URL;
 

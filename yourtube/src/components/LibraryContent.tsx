@@ -9,6 +9,7 @@ import {
   Clapperboard,
   PlaySquare,
   Library,
+  Download,
 } from "lucide-react";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
@@ -20,23 +21,25 @@ export default function LibraryContent() {
     watchlater: 0,
     liked: 0,
     videos: 0,
+    downloads: 0,
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
-      setCounts({ history: 0, watchlater: 0, liked: 0, videos: 0 });
+      setCounts({ history: 0, watchlater: 0, liked: 0, videos: 0, downloads: 0 });
       setLoading(false);
       return;
     }
     let mounted = true;
     const loadCounts = async () => {
       try {
-        const [h, w, l, v] = await Promise.all([
+        const [h, w, l, v, d] = await Promise.all([
           axiosInstance.get(`/history/${user._id}`),
           axiosInstance.get(`/watch/${user._id}`),
           axiosInstance.get(`/like/${user._id}`),
           axiosInstance.get(`/video/channel/${user._id}`),
+          axiosInstance.get(`/download/history/${user._id}`),
         ]);
         if (!mounted) return;
         setCounts({
@@ -44,6 +47,7 @@ export default function LibraryContent() {
           watchlater: w.data.length,
           liked: l.data.length,
           videos: v.data.length,
+          downloads: d.data.length,
         });
       } catch (error) {
         console.error("Error loading library:", error);
@@ -76,6 +80,12 @@ export default function LibraryContent() {
       icon: Clapperboard,
       label: "Your videos",
       count: counts.videos,
+    },
+    {
+      href: "/downloads",
+      icon: Download,
+      label: "Downloads",
+      count: counts.downloads,
     },
   ];
 

@@ -14,6 +14,8 @@ import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { useSubscribe } from "@/lib/useSubscribe";
 import { formatCount } from "@/lib/formatCount";
+import { getVideoUrl } from "@/lib/cloudinary";
+import { toast } from "sonner";
 import Link from "next/link";
 
 const VideoInfo = ({ video }: any) => {
@@ -27,6 +29,17 @@ const VideoInfo = ({ video }: any) => {
   const channelId = video.uploader;
   const isOwner = user && channelId && user._id === channelId;
   const { subscribed, count, loading, toggle } = useSubscribe(channelId);
+
+  const [downloadStatus, setDownloadStatus] = useState({ limit: 1, used: 0, remaining: 0 });
+  const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    if (!user || !video._id) return;
+    axiosInstance
+      .get(`/download/status/${video._id}`)
+      .then((res) => setDownloadStatus(res.data))
+      .catch(() => {});
+  }, [user?._id, video._id]);
 
   useEffect(() => {
     setlikes(video.Like || 0);
@@ -132,6 +145,40 @@ const VideoInfo = ({ video }: any) => {
     }
   };
 
+  const handleDownload = async () => {
+    if (!user) {
+      toast.error("Please sign in to download");
+      return;
+    }
+    if (downloadStatus.remaining <= 0) {
+      toast.error("Daily download limit reached. Upgrade your plan for more downloads.");
+      return;
+    }
+    setDownloading(true);
+    try {
+      await axiosInstance.post(`/download/${video._id}`);
+      setDownloadStatus((prev) => ({
+        ...prev,
+        used: prev.used + 1,
+        remaining: Math.max(0, prev.remaining - 1),
+      }));
+      const url = getVideoUrl(video.filepath);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = video.filename || `${video.videotitle}.mp4`;
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast.success("Download started");
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || "Download failed";
+      toast.error(msg);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="space-y-4 animate-fade-up">
       <h1 className="text-xl font-semibold">{video.videotitle}</h1>
@@ -203,8 +250,17 @@ const VideoInfo = ({ video }: any) => {
             <Share className="w-4 h-4" />
             <span className="hidden sm:inline">Share</span>
           </Button>
-          <Button variant="ghost" size="sm" className="bg-secondary rounded-full text-sm h-9 px-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`bg-secondary rounded-full gap-1.5 text-sm h-9 ${downloadStatus.remaining <= 0 ? "opacity-50" : ""}`}
+            onClick={handleDownload}
+            disabled={downloading || downloadStatus.remaining <= 0}
+          >
             <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">
+              {downloading ? "Downloading..." : `Download (${downloadStatus.remaining})`}
+            </span>
           </Button>
           <Button variant="ghost" size="icon" className="bg-secondary rounded-full h-9 w-9">
             <MoreHorizontal className="w-4 h-4" />
