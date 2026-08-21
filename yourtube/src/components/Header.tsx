@@ -48,7 +48,7 @@ const Header = ({
   useEffect(() => {
     setMounted(true);
     const root = document.documentElement;
-    setCurrentTheme(root.classList.contains("light") ? "light" : "dark");
+    setCurrentTheme(root.classList.contains("dark") ? "dark" : "light");
   }, []);
 
   useEffect(() => {

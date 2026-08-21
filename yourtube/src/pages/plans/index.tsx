@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { safeDate } from "@/lib/videoUtils";
 
 const PLANS = [
   {
@@ -155,9 +156,7 @@ const PlansPage = () => {
           <h1 className="text-2xl sm:text-3xl font-bold">Choose your plan</h1>
           <p className="text-muted-foreground mt-2">
             {status?.active
-              ? `Current plan: ${status.plan} (valid until ${new Date(
-                  status.expiresAt
-                ).toLocaleDateString("en-IN")})`
+              ? `Current plan: ${status.plan}${status.expiresAt ? ` (valid until ${safeDate(status.expiresAt)!.toLocaleDateString("en-IN")})` : ""}`
               : "Upgrade for premium content, more downloads and ad-free viewing"}
           </p>
         </div>

@@ -8,3 +8,9 @@ export function formatDuration(seconds: number | null) {
   }
   return `${m}:${String(s).padStart(2, "0")}`;
 }
+
+export function safeDate(value: any): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}

@@ -206,14 +206,15 @@ export const updateprofile = async (req, res) => {
       .json({ message: "You can only edit your own profile" });
   }
   try {
+    const setFields = {};
+    if (channelname !== undefined) setFields.channelname = channelname;
+    if (description !== undefined) setFields.description = description;
+    if (Object.keys(setFields).length === 0) {
+      return res.status(400).json({ message: "No fields to update" });
+    }
     const updatedata = await users.findByIdAndUpdate(
       _id,
-      {
-        $set: {
-          channelname: channelname,
-          description: description,
-        },
-      },
+      { $set: setFields },
       { new: true }
     );
     if (updatedata) {

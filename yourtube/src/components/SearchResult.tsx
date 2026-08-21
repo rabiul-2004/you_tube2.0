@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SearchX } from "lucide-react";
 import VideoThumb from "./VideoThumb";
 import axiosInstance from "@/lib/axiosinstance";
+import { safeDate } from "@/lib/videoUtils";
 
 const SearchResult = ({ query }: any) => {
   const [videos, setVideos] = useState<any[] | null>(null);
@@ -103,7 +104,7 @@ const SearchResult = ({ query }: any) => {
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                 <span>{video.views?.toLocaleString() || 0} views</span>
                 <span>•</span>
-                <span>{formatDistanceToNow(new Date(video.createdAt))} ago</span>
+                <span>{safeDate(video.createdAt) ? <>{formatDistanceToNow(safeDate(video.createdAt)!)} ago</> : null}</span>
               </div>
 
               <Link

@@ -14,6 +14,7 @@ import {
 import axiosInstance from "@/lib/axiosinstance";
 import { useUser } from "@/lib/AuthContext";
 import { getVideoUrl } from "@/lib/cloudinary";
+import { safeDate } from "@/lib/videoUtils";
 import VideoThumb from "./VideoThumb";
 
 export default function DownloadsContent() {
@@ -127,14 +128,14 @@ export default function DownloadsContent() {
               <p className="text-sm text-muted-foreground">{item.video.videochanel}</p>
               <p className="text-sm text-muted-foreground">
                 {item.video.views?.toLocaleString()} views
-                {item.video.createdAt && <> • {formatDistanceToNow(new Date(item.video.createdAt))} ago</>}
+                {safeDate(item.video?.createdAt) && <> • {formatDistanceToNow(safeDate(item.video.createdAt)!)} ago</>}
               </p>
               <p className="text-xs text-muted-foreground/70 mt-1">
-                Downloaded {formatDistanceToNow(new Date(item.createdAt))} ago • {item.plan}
+                Downloaded {safeDate(item.createdAt) ? <>{formatDistanceToNow(safeDate(item.createdAt)!)} ago</> : "recently"} • {item.plan}
               </p>
             </div>
 
-            <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100">
+            <div className="flex flex-col gap-1 sm:opacity-0 sm:group-hover:opacity-100">
               <Button
                 variant="ghost"
                 size="icon"

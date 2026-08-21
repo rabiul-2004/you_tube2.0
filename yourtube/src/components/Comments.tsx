@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
+import { safeDate } from "@/lib/videoUtils";
 import { MessageSquare } from "lucide-react";
 
 interface Comment {
@@ -26,6 +27,7 @@ const Comments = ({ videoId }: any) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     loadComments();
   }, [videoId]);
 
@@ -177,7 +179,7 @@ const Comments = ({ videoId }: any) => {
                     {comment.usercommented}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(comment.commentedon))} ago
+                    {safeDate(comment.commentedon) ? <>{formatDistanceToNow(safeDate(comment.commentedon)!)} ago</> : null}
                   </span>
                 </div>
 

@@ -79,6 +79,9 @@ export const getDownloadHistory = async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json({ message: "Invalid user ID" });
   }
+  if (req.user._id.toString() !== userId) {
+    return res.status(403).json({ message: "Access denied" });
+  }
 
   try {
     const downloads = await download

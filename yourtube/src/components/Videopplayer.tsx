@@ -176,8 +176,11 @@ export default function VideoPlayer({
   }, [handleDoubleTap]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    // Prevent touchend from triggering click (300ms delay)
-    e.preventDefault();
+    const now = Date.now();
+    const prev = lastTap.current;
+    if (prev && now - prev.time < 300) {
+      e.preventDefault();
+    }
   }, []);
 
   const seekTo = useCallback(

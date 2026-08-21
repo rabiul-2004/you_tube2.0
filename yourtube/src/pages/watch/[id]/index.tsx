@@ -61,6 +61,7 @@ const WatchPage = () => {
   };
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchvideo = async () => {
       if (!id || typeof id !== "string") return;
       setloading(true);
@@ -68,18 +69,25 @@ const WatchPage = () => {
       setvide(null);
       try {
         const [videoRes, allRes] = await Promise.all([
-          axiosInstance.get(`/video/${id}`),
-          axiosInstance.get("/video/getall"),
+          axiosInstance.get(`/video/${id}`, { signal: controller.signal }),
+          axiosInstance.get("/video/getall", { signal: controller.signal }),
         ]);
-        setvideo(videoRes.data);
-        setvide(allRes.data);
+        if (!controller.signal.aborted) {
+          setvideo(videoRes.data);
+          setvide(allRes.data);
+        }
       } catch (error) {
-        console.log(error);
+        if (!controller.signal.aborted) {
+          console.log(error);
+        }
       } finally {
-        setloading(false);
+        if (!controller.signal.aborted) {
+          setloading(false);
+        }
       }
     };
     fetchvideo();
+    return () => controller.abort();
   }, [id]);
 
   if (loading) return <WatchSkeleton />;
@@ -130,7 +138,7 @@ const WatchPage = () => {
             <Comments videoId={id} />
           </div>
           <div className="space-y-4">
-            <RelatedVideos videos={video || []} />
+            <RelatedVideos videos={(video || []).filter((v: any) => v._id !== id)} />
           </div>
         </div>
       </div>

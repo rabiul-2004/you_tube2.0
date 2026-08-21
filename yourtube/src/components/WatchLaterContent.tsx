@@ -15,6 +15,7 @@ import {
 import axiosInstance from "@/lib/axiosinstance";
 import VideoThumb from "./VideoThumb";
 import { useUser } from "@/lib/AuthContext";
+import { safeDate } from "@/lib/videoUtils";
 
 export default function WatchLaterContent() {
   const [watchLater, setWatchLater] = useState<any[]>([]);
@@ -107,10 +108,10 @@ export default function WatchLaterContent() {
               </p>
               <p className="text-sm text-muted-foreground">
                 {item.videoid.views.toLocaleString()} views •{" "}
-                {formatDistanceToNow(new Date(item.videoid.createdAt))} ago
+                {safeDate(item.videoid.createdAt) ? <>{formatDistanceToNow(safeDate(item.videoid.createdAt)!)} ago</> : null}
               </p>
               <p className="text-xs text-muted-foreground/70 mt-1">
-                Added {formatDistanceToNow(new Date(item.createdAt))} ago
+                Added {safeDate(item.createdAt) ? <>{formatDistanceToNow(safeDate(item.createdAt)!)} ago</> : null}
               </p>
             </div>
 
@@ -119,7 +120,7 @@ export default function WatchLaterContent() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="opacity-0 group-hover:opacity-100"
+                  className="sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   <MoreVertical className="w-4 h-4" />
                 </Button>

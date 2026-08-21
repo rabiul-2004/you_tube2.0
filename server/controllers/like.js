@@ -111,3 +111,18 @@ export const getallLikedVideo = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+export const getLikeStatus = async (req, res) => {
+  const { videoId } = req.params;
+  const userId = req.user._id;
+  if (!mongoose.Types.ObjectId.isValid(videoId)) {
+    return res.status(400).json({ message: "Invalid video" });
+  }
+  try {
+    const liked = await like.findOne({ viewer: userId, videoid: videoId });
+    const disliked = await dislike.findOne({ viewer: userId, videoid: videoId });
+    return res.status(200).json({ liked: !!liked, disliked: !!disliked });
+  } catch (error) {
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};

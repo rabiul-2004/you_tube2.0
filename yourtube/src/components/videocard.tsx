@@ -3,7 +3,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { getVideoUrl } from "@/lib/cloudinary";
-import { formatDuration } from "@/lib/videoUtils";
+import { formatDuration, safeDate } from "@/lib/videoUtils";
 import { useState, useRef, useEffect } from "react";
 
 export default function VideoCard({ video }: any) {
@@ -93,7 +93,7 @@ export default function VideoCard({ video }: any) {
             </p>
             <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">
               {video?.views?.toLocaleString()} views •{" "}
-              {formatDistanceToNow(new Date(video?.createdAt))} ago
+              {safeDate(video?.createdAt) ? <>{formatDistanceToNow(safeDate(video?.createdAt)!)} ago</> : null}
             </p>
           </div>
         </div>

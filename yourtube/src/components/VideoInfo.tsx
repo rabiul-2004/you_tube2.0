@@ -17,6 +17,7 @@ import { formatCount } from "@/lib/formatCount";
 import { getVideoUrl } from "@/lib/cloudinary";
 import { toast } from "sonner";
 import Link from "next/link";
+import { safeDate } from "@/lib/videoUtils";
 
 const VideoInfo = ({ video }: any) => {
   const [likes, setlikes] = useState(video.Like || 0);
@@ -44,9 +45,19 @@ const VideoInfo = ({ video }: any) => {
   useEffect(() => {
     setlikes(video.Like || 0);
     setDislikes(video.Dislike || 0);
-    setIsLiked(false);
-    setIsDisliked(false);
-  }, [video._id]);
+    if (!user || !video._id) {
+      setIsLiked(false);
+      setIsDisliked(false);
+      return;
+    }
+    axiosInstance
+      .get(`/like/status/${video._id}`)
+      .then((res) => {
+        setIsLiked(res.data.liked);
+        setIsDisliked(res.data.disliked);
+      })
+      .catch(() => {});
+  }, [video._id, user?._id]);
 
   const viewCountedRef = useRef<string | null>(null);
   useEffect(() => {
@@ -163,13 +174,7 @@ const VideoInfo = ({ video }: any) => {
         remaining: Math.max(0, prev.remaining - 1),
       }));
       const url = getVideoUrl(video.filepath);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = video.filename || `${video.videotitle}.mp4`;
-      a.target = "_blank";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      window.open(url, "_blank");
       toast.success("Download started");
     } catch (error: any) {
       const msg = error?.response?.data?.message || "Download failed";
@@ -271,7 +276,7 @@ const VideoInfo = ({ video }: any) => {
       <div className="bg-secondary rounded-lg p-4 transition-all duration-200 hover:bg-secondary/70">
         <div className="flex gap-4 text-sm font-medium mb-2">
           <span>{video.views?.toLocaleString()} views</span>
-          <span>{formatDistanceToNow(new Date(video.createdAt))} ago</span>
+          <span>{safeDate(video.createdAt) ? <>{formatDistanceToNow(safeDate(video.createdAt)!)} ago</> : null}</span>
         </div>
         <div className={`text-sm text-foreground/70 ${showFullDescription ? "" : "line-clamp-3"}`}>
           <p>{video.description || "No description"}</p>
