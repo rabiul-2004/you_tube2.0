@@ -55,8 +55,17 @@ export const postcomment = async (req, res) => {
 export const getallcomment = async (req, res) => {
   const { videoid } = req.params;
   try {
-    const commentvideo = await comment.find({ videoid: videoid });
-    return res.status(200).json(commentvideo);
+    const commentvideo = await comment
+      .find({ videoid: videoid })
+      .sort({ createdAt: -1 });
+    // never expose who reported a comment on the public endpoint
+    const safe = commentvideo.map((c) => ({
+      ...c.toObject(),
+      reports: undefined,
+      likes: c.likes || [],
+      dislikes: c.dislikes || [],
+    }));
+    return res.status(200).json(safe);
   } catch (error) {
     console.error(" error:", error);
     return res.status(500).json({ message: "Something went wrong" });
@@ -241,6 +250,9 @@ export const translateComment = async (req, res) => {
   const { text, target = "en", source = "auto" } = req.body || {};
   if (typeof text !== "string" || !text.trim()) {
     return res.status(400).json({ message: "Nothing to translate" });
+  }
+  if (text.length > 1200) {
+    return res.status(400).json({ message: "Text is too long to translate" });
   }
   try {
     const result = await Promise.race([

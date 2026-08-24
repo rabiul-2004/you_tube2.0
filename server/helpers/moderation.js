@@ -95,12 +95,28 @@ const vowelSet = new Set(
   BAD_WORDS.map(vowelless).filter((w) => w.length >= 2)
 );
 
-const isBadForm = (form) => {
-  const s = squish(form);
+const isMaskedBadWord = (token) => {
+  const s = squish(token);
   if (!s) return false;
   if (exactSet.has(s) || squishSet.has(s)) return true;
   const v = vowelless(s);
   return v.length >= 2 && vowelSet.has(v);
+};
+
+// tokens like "f*ck", "b!tch", "d.i.c.k" — alphanumerics glued by symbols
+// (apostrophes ignored so contractions like "can't" stay normal words)
+const MASKED_TOKEN_RE = /[a-z0-9]+(?:[^a-z0-9'\s]+[a-z0-9]+)*/g;
+
+const runHasBadWord = (joined) => {
+  const j = squish(joined);
+  if (!j || j.length < 3) return false;
+  for (let i = 0; i < j.length; i++) {
+    for (let len = Math.min(j.length - i, 12); len >= 3; len--) {
+      const sub = j.slice(i, i + len);
+      if (exactSet.has(sub) || vowelSet.has(sub)) return true;
+    }
+  }
+  return false;
 };
 
 export function checkComment(text) {
@@ -115,18 +131,26 @@ export function checkComment(text) {
   const flat = normalize(raw);
   const words = flat.split(" ").filter(Boolean);
 
-  // whole words / masked words ("f*ck" -> "fck", "sh!t" -> "sht")
-  if (words.some(isBadForm)) {
+  // plain whole words only — exact match (no fuzzy, avoids false positives
+  // like "can't"/"count"/"dock"/"rap" colliding with stripped bad words)
+  if (words.some((w) => exactSet.has(w))) {
     return { ok: false, reason: "Your comment contains inappropriate language" };
   }
-  // letter-separated words ("f u c k", "fu ck")
+  // masked words ("f*ck" -> "fuck", "sh!t" -> "sht") — fuzzy forms allowed
+  // here because the separators prove it is not a normal word
+  const maskedTokens = raw.toLowerCase().replace(/'/g, "").match(MASKED_TOKEN_RE) || [];
+  if (maskedTokens.some((t) => /[^a-z0-9]/.test(t) && isMaskedBadWord(t))) {
+    return { ok: false, reason: "Your comment contains inappropriate language" };
+  }
+  // letter-separated words ("f u c k", "fu ck", "a f u c k ing") — scan
+  // substrings of joined short-token runs
   let run = [];
   for (const w of [...words, ""]) {
     if (w.length > 0 && w.length <= 2) {
       run.push(w);
       continue;
     }
-    if (run.length >= 2 && isBadForm(run.join(""))) {
+    if (run.length >= 2 && runHasBadWord(run.join(""))) {
       return { ok: false, reason: "Your comment contains inappropriate language" };
     }
     run = [];

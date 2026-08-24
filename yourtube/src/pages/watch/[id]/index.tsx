@@ -135,7 +135,10 @@ const WatchPage = () => {
               />
             )}
             <VideoInfo video={videos} />
-            <Comments videoId={id} />
+            <Comments
+              videoId={typeof id === "string" ? id : ""}
+              isOwner={!!user && !!videos?.uploader && videos.uploader === user._id}
+            />
           </div>
           <div className="space-y-4">
             <RelatedVideos videos={(video || []).filter((v: any) => v._id !== id)} />
