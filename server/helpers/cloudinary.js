@@ -39,13 +39,13 @@ export function extractPublicId(filepath) {
   return rest.join("/").replace(/\.[^.]+$/, "");
 }
 
-export async function deleteFromCloudinary(filepath) {
+export async function deleteFromCloudinary(filepath, resourceType = "video") {
   ensureConfig();
   const publicId = extractPublicId(filepath);
   if (!publicId) return null;
   try {
     const result = await cloudinary.uploader.destroy(publicId, {
-      resource_type: "video",
+      resource_type: resourceType,
     });
     return result;
   } catch (err) {

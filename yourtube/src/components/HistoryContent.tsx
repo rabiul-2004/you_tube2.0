@@ -103,7 +103,7 @@ export default function HistoryContent() {
           <div key={item._id} className="flex gap-4 group">
             <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
               <div className="relative w-40 aspect-video bg-secondary rounded overflow-hidden">
-                <VideoThumb filepath={item.videoid?.filepath} />
+                <VideoThumb filepath={item.videoid?.filepath} thumbnail={item.videoid?.thumbnail} duration={item.videoid?.duration} />
               </div>
             </Link>
 

@@ -11,6 +11,8 @@ const videochema = mongoose.Schema(
     Dislike: { type: Number, default: 0 },
     views: { type: Number, default: 0 },
     uploader: { type: String },
+    description: { type: String, default: "", maxlength: 5000 },
+    thumbnail: { type: String, default: "" },
     isPremium: { type: Boolean, default: false },
     duration: { type: Number, default: 0 },
   },

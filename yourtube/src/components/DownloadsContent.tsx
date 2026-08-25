@@ -115,7 +115,7 @@ export default function DownloadsContent() {
           <div key={item._id} className="flex gap-4 group">
             <Link href={`/watch/${item.video._id}`} className="flex-shrink-0">
               <div className="relative w-40 aspect-video bg-secondary rounded overflow-hidden">
-                <VideoThumb filepath={item.video?.filepath} />
+                <VideoThumb filepath={item.video?.filepath} thumbnail={item.video?.thumbnail} duration={item.video?.duration} />
               </div>
             </Link>
 

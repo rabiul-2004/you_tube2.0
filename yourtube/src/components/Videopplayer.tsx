@@ -22,6 +22,7 @@ interface VideoPlayerProps {
     _id: string;
     videotitle: string;
     filepath: string;
+    thumbnail?: string;
   };
   nextVideo?: { _id: string; videotitle: string } | null;
   onNextVideo?: (id: string) => void;
@@ -310,6 +311,7 @@ export default function VideoPlayer({
         ref={videoRef}
         className="w-full h-full object-contain"
         src={getVideoUrl(video?.filepath)}
+        poster={video?.thumbnail ? getVideoUrl(video.thumbnail) : undefined}
         playsInline
         muted
         onClick={togglePlay}

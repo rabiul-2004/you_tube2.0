@@ -90,7 +90,7 @@ const SearchResult = ({ query }: any) => {
           <div key={video._id} className="flex flex-col sm:flex-row gap-4 group">
             <Link href={`/watch/${video._id}`} className="flex-shrink-0">
               <div className="relative w-full sm:w-80 aspect-video bg-secondary rounded-lg overflow-hidden">
-                <VideoThumb filepath={video.filepath} />
+                <VideoThumb filepath={video.filepath} thumbnail={video.thumbnail} duration={video.duration} />
               </div>
             </Link>
 

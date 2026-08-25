@@ -9,6 +9,8 @@ interface RelatedVideosProps {
     videotitle: string;
     videochanel: string;
     filepath?: string;
+    thumbnail?: string;
+    duration?: number;
     views: number;
     createdAt: string;
   }>;
@@ -26,7 +28,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
             className="flex gap-2 group"
           >
             <div className="relative w-40 aspect-video bg-secondary rounded-lg overflow-hidden flex-shrink-0">
-              <VideoThumb filepath={video?.filepath} />
+              <VideoThumb filepath={video.filepath} thumbnail={video.thumbnail} duration={video.duration} />
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="font-medium text-sm line-clamp-2 leading-5 group-hover:text-blue-600 transition-colors">

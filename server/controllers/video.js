@@ -18,9 +18,12 @@ export const getUploadSignature = async (req, res) => {
 };
 
 export const uploadvideo = async (req, res) => {
-  const { videotitle, videochanel, uploader, isPremium, filepath, filename, filetype, filesize, duration } = req.body;
+  const { videotitle, videochanel, uploader, isPremium, filepath, filename, filetype, filesize, duration, description, thumbnail } = req.body;
   if (!filepath || !filepath.startsWith("http")) {
     return res.status(400).json({ message: "Invalid video URL" });
+  }
+  if (thumbnail && !/^https?:\/\//i.test(thumbnail)) {
+    return res.status(400).json({ message: "Invalid thumbnail URL" });
   }
   try {
     const file = new video({
@@ -31,6 +34,9 @@ export const uploadvideo = async (req, res) => {
       filesize: filesize || "0",
       videochanel: req.user.channelname || req.user.name || videochanel || "",
       uploader: req.user._id.toString(),
+      description:
+        typeof description === "string" ? description.trim().slice(0, 5000) : "",
+      thumbnail: typeof thumbnail === "string" ? thumbnail : "",
       isPremium: isPremium === "true" || isPremium === true,
       duration: Number(duration) || 0,
     });
@@ -87,7 +93,7 @@ export const getvideoByChannel = async (req, res) => {
 
 export const updatevideo = async (req, res) => {
   const { id } = req.params;
-  const { videotitle, isPremium } = req.body;
+  const { videotitle, isPremium, description, thumbnail } = req.body;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).json({ message: "Video not found" });
   }
@@ -101,15 +107,26 @@ export const updatevideo = async (req, res) => {
         .status(403)
         .json({ message: "You can only edit your own videos" });
     }
+    if (thumbnail && !/^https?:\/\//i.test(thumbnail)) {
+      return res.status(400).json({ message: "Invalid thumbnail URL" });
+    }
     const updateFields = {};
     if (videotitle !== undefined) updateFields.videotitle = videotitle;
     if (isPremium !== undefined)
       updateFields.isPremium = isPremium === "true" || isPremium === true;
+    if (description !== undefined)
+      updateFields.description = String(description).trim().slice(0, 5000);
+    let oldThumbnail = null;
+    if (thumbnail !== undefined && thumbnail !== file.thumbnail) {
+      updateFields.thumbnail = thumbnail;
+      oldThumbnail = file.thumbnail;
+    }
     const updatedfile = await video.findByIdAndUpdate(
       id,
       { $set: updateFields },
       { new: true }
     );
+    if (oldThumbnail) await deleteFromCloudinary(oldThumbnail, "image");
     return res.status(200).json(updatedfile);
   } catch (error) {
     console.error(" error:", error);
@@ -133,6 +150,7 @@ export const deletevideo = async (req, res) => {
         .json({ message: "You can only delete your own videos" });
     }
     await deleteFromCloudinary(file.filepath);
+    if (file.thumbnail) await deleteFromCloudinary(file.thumbnail, "image");
     await video.findByIdAndDelete(id);
     await like.deleteMany({ videoid: id });
     await dislike.deleteMany({ videoid: id });

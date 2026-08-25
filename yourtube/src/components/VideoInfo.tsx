@@ -278,7 +278,7 @@ const VideoInfo = ({ video }: any) => {
           <span>{video.views?.toLocaleString()} views</span>
           <span>{safeDate(video.createdAt) ? <>{formatDistanceToNow(safeDate(video.createdAt)!)} ago</> : null}</span>
         </div>
-        <div className={`text-sm text-foreground/70 ${showFullDescription ? "" : "line-clamp-3"}`}>
+        <div className={`text-sm text-foreground/70 break-words [overflow-wrap:anywhere] ${showFullDescription ? "" : "line-clamp-3"}`}>
           <p>{video.description || "No description"}</p>
         </div>
         <button

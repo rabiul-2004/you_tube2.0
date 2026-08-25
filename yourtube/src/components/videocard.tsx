@@ -11,6 +11,8 @@ export default function VideoCard({ video }: any) {
   const [error, setError] = useState(false);
   const [duration, setDuration] = useState<number | null>(null);
   const [isInView, setIsInView] = useState(false);
+  const [thumbLoaded, setThumbLoaded] = useState(false);
+  const [thumbError, setThumbError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -48,38 +50,56 @@ export default function VideoCard({ video }: any) {
       href={`/watch/${video?._id}`}
       className="group block w-full min-w-0 animate-fade-up"
     >
-      <div ref={containerRef} className="space-y-2 sm:space-y-3 w-full min-w-0">
-        <div className="relative aspect-video rounded-xl overflow-hidden bg-secondary">
-          {!error ? (
-            <>
-              <video
-                ref={videoRef}
-                src={getVideoUrl(video?.filepath)}
-                className={`object-cover w-full h-full min-w-0 group-hover:scale-105 transition-transform duration-500 ${
-                  loaded ? "opacity-100" : "opacity-0"
-                }`}
-                onLoadedData={() => setLoaded(true)}
-                onLoadedMetadata={handleLoadedMetadata}
-                onError={() => setError(true)}
-                muted
-                preload={isInView ? "metadata" : "none"}
-                playsInline
-              />
-              {!loaded && !error && (
-                <div className="absolute inset-0 animate-skeleton" />
-              )}
-            </>
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-secondary text-muted-foreground text-sm">
-              Video unavailable
-            </div>
-          )}
-          {formatDuration(duration) && (
-            <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[11px] px-1 rounded font-medium">
-              {formatDuration(duration)}
-            </div>
-          )}
-        </div>
+        <div ref={containerRef} className="space-y-2 sm:space-y-3 w-full min-w-0">
+          <div className="relative aspect-video rounded-xl overflow-hidden bg-secondary">
+            {video?.thumbnail ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={getVideoUrl(video.thumbnail)}
+                  alt=""
+                  className={`object-cover w-full h-full min-w-0 group-hover:scale-105 transition-transform duration-500 ${
+                    thumbLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                  onLoad={() => setThumbLoaded(true)}
+                  onError={() => setThumbError(true)}
+                />
+                {thumbLoaded && !thumbError && formatDuration(video.duration) && (
+                  <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[11px] px-1 rounded font-medium">
+                    {formatDuration(video.duration)}
+                  </div>
+                )}
+              </>
+            ) : !error ? (
+              <>
+                <video
+                  ref={videoRef}
+                  src={getVideoUrl(video?.filepath)}
+                  className={`object-cover w-full h-full min-w-0 group-hover:scale-105 transition-transform duration-500 ${
+                    loaded ? "opacity-100" : "opacity-0"
+                  }`}
+                  onLoadedData={() => setLoaded(true)}
+                  onLoadedMetadata={handleLoadedMetadata}
+                  onError={() => setError(true)}
+                  muted
+                  preload={isInView ? "metadata" : "none"}
+                  playsInline
+                />
+                {!loaded && !error && (
+                  <div className="absolute inset-0 animate-skeleton" />
+                )}
+              </>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-secondary text-muted-foreground text-sm">
+                Video unavailable
+              </div>
+            )}
+            {!video?.thumbnail && formatDuration(duration) && (
+              <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[11px] px-1 rounded font-medium">
+                {formatDuration(duration)}
+              </div>
+            )}
+          </div>
         <div className="flex gap-2 sm:gap-3 px-0.5 sm:px-1">
           <Avatar className="w-9 h-9 flex-shrink-0 mt-0.5 hidden sm:flex">
             <AvatarFallback className="text-sm">{video?.videochanel?.[0]}</AvatarFallback>

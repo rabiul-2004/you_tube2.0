@@ -3,20 +3,39 @@ import { useState } from "react";
 import { getVideoUrl } from "@/lib/cloudinary";
 import { formatDuration } from "@/lib/videoUtils";
 
-export default function VideoThumb({ filepath }: { filepath?: string }) {
+export default function VideoThumb({
+  filepath,
+  thumbnail,
+  duration,
+}: {
+  filepath?: string;
+  thumbnail?: string;
+  duration?: number;
+}) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const [duration, setDuration] = useState<number | null>(null);
+  const [imgFailed, setImgFailed] = useState(false);
+  const [metaDuration, setMetaDuration] = useState<number | null>(null);
 
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    setDuration(e.currentTarget.duration);
+    setMetaDuration(e.currentTarget.duration);
   };
 
-  const formatted = formatDuration(duration);
+  const effectiveDuration = duration && duration > 0 ? duration : metaDuration;
+  const formatted = formatDuration(effectiveDuration);
+  const showImage = !!thumbnail && !imgFailed;
 
   return (
     <div className="relative w-full h-full">
-      {!error ? (
+      {showImage ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={getVideoUrl(thumbnail)}
+          alt=""
+          className="object-cover w-full h-full"
+          onError={() => setImgFailed(true)}
+        />
+      ) : !error ? (
         <video
           src={getVideoUrl(filepath)}
           className={`object-cover w-full h-full transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
