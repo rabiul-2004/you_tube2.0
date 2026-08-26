@@ -13,6 +13,7 @@ import { createContext } from "react";
 import { provider, auth } from "./firebase";
 import axiosInstance from "./axiosinstance";
 import { useEffect, useContext, useRef } from "react";
+import { toast } from "sonner";
 
 const UserContext = createContext();
 
@@ -38,6 +39,7 @@ export const UserProvider = ({ children }) => {
   const [otpUserId, setOtpUserId] = useState(null);
   const [otpMessage, setOtpMessage] = useState("");
   const userRef = useRef(null);
+  const pendingToast = useRef(null);
 
   const login = (userdata) => {
     const current = JSON.stringify(userRef.current);
@@ -50,6 +52,7 @@ export const UserProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    pendingToast.current = null;
     userRef.current = null;
     setUser(null);
     setOtpRequired(false);
@@ -87,6 +90,10 @@ export const UserProvider = ({ children }) => {
       applyTheme(result.theme);
     }
     login(result);
+    if (pendingToast.current) {
+      toast(pendingToast.current);
+      pendingToast.current = null;
+    }
   };
 
   const applyTheme = (theme) => {
@@ -125,9 +132,11 @@ export const UserProvider = ({ children }) => {
     if (signingIn) return { success: false };
     setSigningIn(true);
     try {
+      pendingToast.current = "Welcome back!";
       await signInWithPopup(auth, provider);
       return { success: true };
     } catch (error) {
+      pendingToast.current = null;
       return { success: false, code: error.code };
     } finally {
       setSigningIn(false);
@@ -136,9 +145,11 @@ export const UserProvider = ({ children }) => {
 
   const signinwithemail = async (email, password) => {
     try {
+      pendingToast.current = "Welcome back!";
       await signInWithEmailAndPassword(auth, email, password);
       return true;
     } catch (error) {
+      pendingToast.current = null;
       throw error;
     }
   };
@@ -159,6 +170,9 @@ export const UserProvider = ({ children }) => {
     } catch (error) {
       console.error("Verification email send failed:", error.code || error);
     }
+    pendingToast.current = emailSent
+      ? "Account created! We sent a verification link to your email. Verify it to upload videos and comment."
+      : "Account created, but the verification email couldn't be sent right now. Use \"Resend email\" in a few minutes.";
     return { emailSent };
   };
 
@@ -179,6 +193,10 @@ export const UserProvider = ({ children }) => {
         try {
           await syncWithBackend(firebaseuser);
         } catch (error) {
+          if (pendingToast.current) {
+            toast.error("Sign-in failed — the server may be down. Please try again.");
+            pendingToast.current = null;
+          }
           console.error(error);
           logout();
         }

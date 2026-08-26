@@ -33,6 +33,7 @@ const Header = ({
   const [isdialogeopen, setisdialogeopen] = useState(false);
   const [issigninopen, setissigninopen] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -56,6 +57,15 @@ const Header = ({
       searchInputRef.current.focus();
     }
   }, [isSearchOpen]);
+
+  // dismiss the user menu on any scroll — prevents stale/off-screen dropdowns
+  // and accidental item taps when the page moves under an open menu
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const close = () => setUserMenuOpen(false);
+    window.addEventListener("scroll", close, { passive: true });
+    return () => window.removeEventListener("scroll", close);
+  }, [userMenuOpen]);
 
   const handleThemeToggle = async () => {
     const newTheme = currentTheme === "dark" ? "light" : "dark";
@@ -208,7 +218,11 @@ const Header = ({
               >
                 <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
               </Button>
-              <DropdownMenu>
+              <DropdownMenu
+                modal={false}
+                open={userMenuOpen}
+                onOpenChange={setUserMenuOpen}
+              >
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"

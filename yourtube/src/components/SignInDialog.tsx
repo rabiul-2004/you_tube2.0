@@ -81,22 +81,12 @@ const SignInDialog = ({ isopen, onclose }: { isopen: boolean; onclose: () => voi
     try {
       if (mode === "signin") {
         await signinwithemail(email.trim(), password);
-        toast("Welcome back!");
       } else {
-        const result = await signupwithemail(
+        await signupwithemail(
           name.trim() || "New User",
           email.trim(),
           password
         );
-        if (result.emailSent) {
-          toast(
-            "Account created! We sent a verification link to your email. Verify it to upload videos and comment."
-          );
-        } else {
-          toast(
-            "Account created, but the verification email couldn't be sent right now. Use \"Resend email\" in a few minutes."
-          );
-        }
       }
       setName("");
       setEmail("");
