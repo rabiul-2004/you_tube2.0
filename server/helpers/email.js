@@ -1,7 +1,20 @@
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 
-const getTransporter = () => {
+const MAIL_FROM = process.env.MAIL_FROM || "YourTube <noreply@yourtube.dev>";
+
+const smtpConfigured = () =>
+  !!(
+    process.env.SMTP_HOST &&
+    process.env.SMTP_USER &&
+    process.env.SMTP_PASS
+  );
+
+const brevoApiConfigured = () => !!process.env.BREVO_API_KEY;
+
+export const mailConfigured = () => brevoApiConfigured() || smtpConfigured();
+
+const getSmtpTransporter = () => {
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
@@ -10,7 +23,51 @@ const getTransporter = () => {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    connectionTimeout: 10 * 1000,
+    greetingTimeout: 10 * 1000,
+    socketTimeout: 15 * 1000,
   });
+};
+
+const parseSender = (from) => {
+  const match = from.match(/^(.*?)\s*<([^>]+)>$/);
+  if (match) {
+    return { name: match[1].trim(), email: match[2] };
+  }
+  return { email: from.trim() };
+};
+
+const sendViaBrevoApi = async ({ to, subject, html }) => {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": process.env.BREVO_API_KEY,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      sender: parseSender(MAIL_FROM),
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
+  if (!res.ok) {
+    let detail = "";
+    try {
+      detail = await res.text();
+    } catch {
+      detail = "";
+    }
+    throw new Error(`Brevo API ${res.status}: ${detail}`);
+  }
+};
+
+const sendEmail = async ({ to, subject, html }) => {
+  if (brevoApiConfigured()) {
+    return sendViaBrevoApi({ to, subject, html });
+  }
+  await getSmtpTransporter().sendMail({ from: MAIL_FROM, to, subject, html });
 };
 
 export const generateOTP = () => {
@@ -18,12 +75,10 @@ export const generateOTP = () => {
 };
 
 export const sendOtpEmail = async ({ to, name, otp, city, state }) => {
-  if (
-    !process.env.SMTP_HOST ||
-    !process.env.SMTP_USER ||
-    !process.env.SMTP_PASS
-  ) {
-    throw new Error("SMTP config missing in server/.env");
+  if (!mailConfigured()) {
+    throw new Error(
+      "No mail provider configured (set BREVO_API_KEY or SMTP_* in server/.env)"
+    );
   }
 
   const location = [city, state].filter(Boolean).join(", ");
@@ -45,8 +100,7 @@ export const sendOtpEmail = async ({ to, name, otp, city, state }) => {
     </div>
   `;
 
-  await getTransporter().sendMail({
-    from: process.env.MAIL_FROM || "YourTube <noreply@yourtube.dev>",
+  await sendEmail({
     to,
     subject: `YourTube — OTP for new device verification`,
     html,
@@ -62,12 +116,10 @@ export const sendInvoiceEmail = async ({
   orderId,
   expiresAt,
 }) => {
-  if (
-    !process.env.SMTP_HOST ||
-    !process.env.SMTP_USER ||
-    !process.env.SMTP_PASS
-  ) {
-    throw new Error("SMTP config missing in server/.env");
+  if (!mailConfigured()) {
+    throw new Error(
+      "No mail provider configured (set BREVO_API_KEY or SMTP_* in server/.env)"
+    );
   }
   const amountRupees = (amountPaise / 100).toFixed(2);
   const expiryDate = new Date(expiresAt).toLocaleDateString("en-IN", {
@@ -96,8 +148,7 @@ export const sendInvoiceEmail = async ({
     </div>
   `;
 
-  await getTransporter().sendMail({
-    from: process.env.MAIL_FROM || "YourTube <noreply@yourtube.dev>",
+  await sendEmail({
     to,
     subject: `YourTube ${plan} plan activated — Invoice`,
     html,
