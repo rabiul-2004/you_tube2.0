@@ -1,6 +1,9 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import userroutes from "./routes/auth.js";
 import videoroutes from "./routes/video.js";
@@ -13,8 +16,24 @@ import subscriberoutes from "./routes/subscribe.js";
 import downloadroutes from "./routes/download.js";
 import locationroutes from "./controllers/location.js";
 dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const SERVICE_ACCOUNT_PATH =
+  process.env.FIREBASE_SERVICE_ACCOUNT ||
+  path.join(__dirname, "firebase-service-account.json");
+if (
+  process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 &&
+  !fs.existsSync(SERVICE_ACCOUNT_PATH)
+) {
+  fs.mkdirSync(path.dirname(SERVICE_ACCOUNT_PATH), { recursive: true });
+  fs.writeFileSync(
+    SERVICE_ACCOUNT_PATH,
+    Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, "base64")
+  );
+}
+
 const app = express();
-import path from "path";
 app.use(cors());
 app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
