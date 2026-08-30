@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
   Clock,
@@ -192,6 +192,9 @@ const VideoInfo = ({ video }: any) => {
         <div className="flex items-center gap-4">
           <Link href={channelId ? `/channel/${channelId}` : "#"}>
             <Avatar className="w-10 h-10">
+              {video.videochanelImage && (
+                <AvatarImage src={video.videochanelImage} alt={video.videochanel} />
+              )}
               <AvatarFallback>{video.videochanel?.[0]}</AvatarFallback>
             </Avatar>
           </Link>

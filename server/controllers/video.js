@@ -33,6 +33,7 @@ export const uploadvideo = async (req, res) => {
       filetype: filetype || "video/mp4",
       filesize: filesize || "0",
       videochanel: req.user.channelname || req.user.name || videochanel || "",
+      videochanelImage: req.user.channelImage || "",
       uploader: req.user._id.toString(),
       description:
         typeof description === "string" ? description.trim().slice(0, 5000) : "",

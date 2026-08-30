@@ -57,14 +57,20 @@ export const getallcomment = async (req, res) => {
   try {
     const commentvideo = await comment
       .find({ videoid: videoid })
+      .populate("userid", "image")
       .sort({ createdAt: -1 });
     // never expose who reported a comment on the public endpoint
-    const safe = commentvideo.map((c) => ({
-      ...c.toObject(),
-      reports: undefined,
-      likes: c.likes || [],
-      dislikes: c.dislikes || [],
-    }));
+    const safe = commentvideo.map((c) => {
+      const commenter = c.userid;
+      return {
+        ...c.toObject(),
+        userid: commenter?._id || c.userid,
+        userimage: commenter?.image || "",
+        reports: undefined,
+        likes: c.likes || [],
+        dislikes: c.dislikes || [],
+      };
+    });
     return res.status(200).json(safe);
   } catch (error) {
     console.error(" error:", error);

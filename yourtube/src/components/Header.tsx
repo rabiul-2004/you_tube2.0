@@ -12,6 +12,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import Channeldialogue from "./channeldialogue";
+import ProfileEditDialog from "./ProfileEditDialog";
 import SignInDialog from "./SignInDialog";
 import { useRouter } from "next/router";
 import { useUser } from "@/lib/AuthContext";
@@ -32,6 +33,7 @@ const Header = ({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isdialogeopen, setisdialogeopen] = useState(false);
   const [issigninopen, setissigninopen] = useState(false);
+  const [isprofileopen, setisprofileopen] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const router = useRouter();
@@ -262,6 +264,12 @@ const Header = ({
                       </Button>
                     </div>
                   )}
+                  <DropdownMenuItem
+                    onClick={() => setisprofileopen(true)}
+                    className="touch-target py-2"
+                  >
+                    Profile
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/history" className="touch-target py-2">History</Link>
                   </DropdownMenuItem>
@@ -323,6 +331,10 @@ const Header = ({
         isopen={isdialogeopen}
         onclose={() => setisdialogeopen(false)}
         mode="create"
+      />
+      <ProfileEditDialog
+        isopen={isprofileopen}
+        onclose={() => setisprofileopen(false)}
       />
       <SignInDialog isopen={issigninopen} onclose={() => setissigninopen(false)} />
     </header>

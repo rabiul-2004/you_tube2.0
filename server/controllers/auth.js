@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import users from "../Modals/Auth.js";
 import video from "../Modals/video.js";
 import { generateOTP, sendOtpEmail } from "../helpers/email.js";
+import { deleteFromCloudinary } from "../helpers/cloudinary.js";
 
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
@@ -196,7 +197,7 @@ export const getuserbyid = async (req, res) => {
 
 export const updateprofile = async (req, res) => {
   const { id: _id } = req.params;
-  const { channelname, description } = req.body;
+  const { channelname, description, image, channelImage, coverImage } = req.body;
   if (!mongoose.Types.ObjectId.isValid(_id)) {
     return res.status(500).json({ message: "User unavailable..." });
   }
@@ -205,12 +206,32 @@ export const updateprofile = async (req, res) => {
       .status(403)
       .json({ message: "You can only edit your own profile" });
   }
+  const validImage = (v) =>
+    v === undefined ||
+    (typeof v === "string" && (v === "" || /^https?:\/\//i.test(v)));
+  if (!validImage(image) || !validImage(channelImage) || !validImage(coverImage)) {
+    return res.status(400).json({ message: "Invalid profile image URL" });
+  }
   try {
     const setFields = {};
     if (channelname !== undefined) setFields.channelname = channelname;
     if (description !== undefined) setFields.description = description;
+    if (image !== undefined) setFields.image = image;
+    if (channelImage !== undefined) setFields.channelImage = channelImage;
+    if (coverImage !== undefined) setFields.coverImage = coverImage;
     if (Object.keys(setFields).length === 0) {
       return res.status(400).json({ message: "No fields to update" });
+    }
+    const existing = await users.findById(_id);
+    for (const field of ["channelImage", "coverImage"]) {
+      if (
+        setFields[field] !== undefined &&
+        existing?.[field] &&
+        setFields[field] !== existing[field] &&
+        existing[field].includes("res.cloudinary.com")
+      ) {
+        await deleteFromCloudinary(existing[field], "image");
+      }
     }
     const updatedata = await users.findByIdAndUpdate(
       _id,
@@ -220,7 +241,12 @@ export const updateprofile = async (req, res) => {
     if (updatedata) {
       await video.updateMany(
         { uploader: _id },
-        { $set: { videochanel: updatedata.channelname || "" } }
+        {
+          $set: {
+            videochanel: updatedata.channelname || "",
+            videochanelImage: updatedata.channelImage || "",
+          },
+        }
       );
     }
     return res.status(200).json(updatedata);

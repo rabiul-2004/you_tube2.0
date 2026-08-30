@@ -34,6 +34,7 @@ interface CommentType {
   userid: string;
   commentbody: string;
   usercommented: string;
+  userimage?: string;
   commentedon: string;
   likes?: string[];
   dislikes?: string[];
@@ -533,6 +534,12 @@ const Comments = ({ videoId, isOwner }: { videoId: string; isOwner?: boolean }) 
             return (
               <div key={comment._id} className="flex gap-4 animate-fade-up">
                 <Avatar className="w-10 h-10 flex-shrink-0">
+                  {comment.userimage ? (
+                    <AvatarImage
+                      src={comment.userimage}
+                      alt={comment.usercommented}
+                    />
+                  ) : null}
                   <AvatarFallback className="text-sm">
                     {comment.usercommented?.[0] || "?"}
                   </AvatarFallback>

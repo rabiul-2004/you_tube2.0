@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { getVideoUrl } from "@/lib/cloudinary";
 import { formatDuration, safeDate } from "@/lib/videoUtils";
 import { useState, useRef, useEffect } from "react";
@@ -50,7 +50,7 @@ export default function VideoCard({ video }: any) {
       href={`/watch/${video?._id}`}
       className="group block w-full min-w-0 animate-fade-up"
     >
-        <div ref={containerRef} className="space-y-2 sm:space-y-3 w-full min-w-0">
+        <div ref={containerRef} className="space-y-3 w-full min-w-0 pb-2 sm:pb-3">
           <div className="relative aspect-video rounded-xl overflow-hidden bg-secondary">
             {video?.thumbnail ? (
               <>
@@ -102,6 +102,9 @@ export default function VideoCard({ video }: any) {
           </div>
         <div className="flex gap-2 sm:gap-3 px-0.5 sm:px-1">
           <Avatar className="w-9 h-9 flex-shrink-0 mt-0.5 hidden sm:flex">
+            {video?.videochanelImage && (
+              <AvatarImage src={video.videochanelImage} alt={video?.videochanel} />
+            )}
             <AvatarFallback className="text-sm">{video?.videochanel?.[0]}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">

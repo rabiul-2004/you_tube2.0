@@ -1,7 +1,8 @@
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 
-const MAIL_FROM = process.env.MAIL_FROM || "YourTube <noreply@yourtube.dev>";
+const getMailFrom = () =>
+  process.env.MAIL_FROM || "YourTube <noreply@yourtube.dev>";
 
 const smtpConfigured = () =>
   !!(
@@ -12,7 +13,8 @@ const smtpConfigured = () =>
 
 const brevoApiConfigured = () => !!process.env.BREVO_API_KEY;
 
-export const mailConfigured = () => brevoApiConfigured() || smtpConfigured();
+export const mailConfigured = () =>
+  !!process.env.MAIL_FROM && (brevoApiConfigured() || smtpConfigured());
 
 const getSmtpTransporter = () => {
   return nodemailer.createTransport({
@@ -46,7 +48,7 @@ const sendViaBrevoApi = async ({ to, subject, html }) => {
       Accept: "application/json",
     },
     body: JSON.stringify({
-      sender: parseSender(MAIL_FROM),
+      sender: parseSender(getMailFrom()),
       to: [{ email: to }],
       subject,
       htmlContent: html,
@@ -67,7 +69,12 @@ const sendEmail = async ({ to, subject, html }) => {
   if (brevoApiConfigured()) {
     return sendViaBrevoApi({ to, subject, html });
   }
-  await getSmtpTransporter().sendMail({ from: MAIL_FROM, to, subject, html });
+  await getSmtpTransporter().sendMail({
+    from: getMailFrom(),
+    to,
+    subject,
+    html,
+  });
 };
 
 export const generateOTP = () => {

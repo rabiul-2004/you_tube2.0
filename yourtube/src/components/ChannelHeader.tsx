@@ -14,14 +14,26 @@ const ChannelHeader = ({ channel, videoCount, onEditChannel }: any) => {
   return (
     <div className="w-full animate-fade-up">
       <div className="relative h-32 md:h-48 lg:h-64 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-400 overflow-hidden">
-        <div className="absolute inset-0 opacity-20 pattern-dots" />
+        {channel?.coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={channel.coverImage}
+            alt="Channel cover"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 opacity-20 pattern-dots" />
+        )}
       </div>
 
       <div className="px-4 sm:px-6 py-4 sm:py-6">
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
           <Avatar className="w-20 h-20 sm:w-32 sm:h-32 ring-4 ring-white -mt-10 sm:-mt-16">
-            {channel?.image ? (
-              <AvatarImage src={channel.image} alt={channel.channelname} />
+            {channel?.channelImage ? (
+              <AvatarImage
+                src={channel.channelImage}
+                alt={channel.channelname}
+              />
             ) : null}
             <AvatarFallback className="text-2xl sm:text-4xl">
               {channel?.channelname?.[0] || "?"}

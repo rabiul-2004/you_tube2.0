@@ -112,7 +112,9 @@ const SearchResult = ({ query }: any) => {
                 className="flex items-center gap-2 mb-2 hover:text-blue-600 transition-colors w-fit"
               >
                 <Avatar className="w-6 h-6">
-                  <AvatarImage src="/placeholder.svg?height=24&width=24" />
+                  {video.videochanelImage && (
+                    <AvatarImage src={video.videochanelImage} alt={video.videochanel} />
+                  )}
                   <AvatarFallback className="text-xs">{video.videochanel?.[0]}</AvatarFallback>
                 </Avatar>
                 <span className="text-sm text-muted-foreground">{video.videochanel}</span>
