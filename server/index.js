@@ -1,10 +1,14 @@
 import express from "express";
+import http from "http";
 import cors from "cors";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
+import { Server } from "socket.io";
+import { setupSocket } from "./realtime/watchparty.js";
+import { startPeerServer } from "./realtime/peer.js";
 import userroutes from "./routes/auth.js";
 import videoroutes from "./routes/video.js";
 import likeroutes from "./routes/like.js";
@@ -39,6 +43,22 @@ app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
 app.use("/uploads", express.static(path.join("uploads")));
 
+const httpServer = http.createServer(app);
+
+const CLIENT_ORIGINS = (process.env.CLIENT_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: CLIENT_ORIGINS.length ? CLIENT_ORIGINS : true,
+    credentials: true,
+  },
+});
+
+setupSocket(io);
+
 app.get("/", (req, res) => {
   res.send("You tube backend is working");
 });
@@ -54,15 +74,19 @@ app.use("/plan", planroutes);
 app.use("/subscribe", subscriberoutes);
 app.use("/download", downloadroutes);
 const PORT = process.env.PORT || 5000;
+const PEER_PORT = process.env.PEER_PORT || 9000;
 const DBURL = process.env.DB_URL;
 
 mongoose
   .connect(DBURL)
   .then(() => {
     console.log("Mongodb connected");
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`server running on port ${PORT}`);
     });
+    if (process.env.ENABLE_PEER !== "false") {
+      startPeerServer(PEER_PORT);
+    }
   })
   .catch((error) => {
     console.log(error);

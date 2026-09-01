@@ -1,6 +1,13 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { getVideoUrl } from "@/lib/cloudinary";
 import { formatDuration } from "@/lib/videoUtils";
 import {
@@ -28,11 +35,18 @@ interface VideoPlayerProps {
   onNextVideo?: (id: string) => void;
 }
 
-export default function VideoPlayer({
-  video,
-  nextVideo,
-  onNextVideo,
-}: VideoPlayerProps) {
+export interface VideoPlayerHandle {
+  play: () => void;
+  pause: () => void;
+  seekTo: (seconds: number) => void;
+  getPosition: () => number;
+  isPlaying: () => boolean;
+}
+
+export default forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPlayer(
+  { video, nextVideo, onNextVideo },
+  ref
+) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -127,6 +141,30 @@ export default function VideoPlayer({
     }
     showControlsTemporarily();
   }, [showControlsTemporarily]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      play: () => {
+        videoRef.current?.play();
+        showControlsTemporarily();
+      },
+      pause: () => {
+        videoRef.current?.pause();
+        setControlsVisible(true);
+      },
+      seekTo: (seconds: number) => {
+        const el = videoRef.current;
+        if (!el) return;
+        el.currentTime = Math.min(Math.max(seconds, 0), el.duration || 0);
+        setCurrentTime(el.currentTime);
+        showControlsTemporarily();
+      },
+      getPosition: () => videoRef.current?.currentTime ?? 0,
+      isPlaying: () => !videoRef.current?.paused,
+    }),
+    [showControlsTemporarily]
+  );
 
   const seekBy = useCallback(
     (seconds: number) => {
@@ -503,4 +541,4 @@ export default function VideoPlayer({
       </div>
     </div>
   );
-}
+});

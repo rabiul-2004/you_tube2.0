@@ -1,15 +1,16 @@
 import Comments from "@/components/Comments";
 import RelatedVideos from "@/components/RelatedVideos";
 import VideoInfo from "@/components/VideoInfo";
-import Videopplayer from "@/components/Videopplayer";
+import Videopplayer, { VideoPlayerHandle } from "@/components/Videopplayer";
+import WatchPartyDialog from "@/components/WatchPartyDialog";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { hasActivePaidPlan } from "@/lib/planUtils";
-import { Lock } from "lucide-react";
+import { Lock, Video as VideoIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 function WatchSkeleton() {
   return (
@@ -46,6 +47,10 @@ const WatchPage = () => {
   const [videos, setvideo] = useState<any>(null);
   const [video, setvide] = useState<any>(null);
   const [loading, setloading] = useState(true);
+  const [partyOpen, setPartyOpen] = useState(false);
+  const [partyCode, setPartyCode] = useState<string | null>(null);
+  const openPartyOnLoadRef = useRef(true);
+  const playerRef = useRef<VideoPlayerHandle | null>(null);
 
   const allVideos = video || [];
   const currentIndex = allVideos.findIndex((v: any) => v._id === id);
@@ -55,6 +60,17 @@ const WatchPage = () => {
       : null;
 
   const isLocked = videos?.isPremium && !hasActivePaidPlan(user);
+
+  useEffect(() => {
+    if (!loading && !videos) return;
+    if (!openPartyOnLoadRef.current) return;
+    const code = router.query.party;
+    if (typeof code === "string") {
+      setPartyCode(code);
+      setPartyOpen(true);
+      openPartyOnLoadRef.current = false;
+    }
+  }, [loading, router.query.party, videos]);
 
   const handleNextVideo = (nextId: string) => {
     router.push(`/watch/${nextId}`);
@@ -129,11 +145,31 @@ const WatchPage = () => {
               </div>
             ) : (
               <Videopplayer
+                ref={playerRef}
                 video={videos}
                 nextVideo={nextVideo}
                 onNextVideo={handleNextVideo}
               />
             )}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setPartyCode((c) => c ?? null);
+                  setPartyOpen(true);
+                }}
+              >
+                <VideoIcon className="w-4 h-4" /> Watch party
+              </Button>
+              <WatchPartyDialog
+                videoId={typeof id === "string" ? id : ""}
+                playerRef={playerRef}
+                open={partyOpen}
+                onOpenChange={setPartyOpen}
+                initialCode={partyCode}
+              />
+            </div>
             <VideoInfo video={videos} />
             <Comments
               videoId={typeof id === "string" ? id : ""}

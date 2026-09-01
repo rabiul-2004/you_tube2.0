@@ -11,7 +11,7 @@ let authApp = null;
 let authService = null;
 let authError = null;
 
-const getFirebaseAuth = () => {
+export const getFirebaseAuth = () => {
   if (authService) return authService;
   if (authError) throw authError;
   const keyPath = process.env.FIREBASE_SERVICE_ACCOUNT
@@ -28,14 +28,7 @@ const getFirebaseAuth = () => {
   }
 };
 
-const verifyToken = async (req) => {
-  const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  if (!token) {
-    const error = new Error("Authentication required");
-    error.status = 401;
-    throw error;
-  }
+export const verifyIdToken = async (token) => {
   const decoded = await getFirebaseAuth().verifyIdToken(token);
   return {
     uid: decoded.uid,
@@ -45,6 +38,17 @@ const verifyToken = async (req) => {
     picture: decoded.picture || "",
     email_verified: !!decoded.email_verified,
   };
+};
+
+const verifyToken = async (req) => {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+  if (!token) {
+    const error = new Error("Authentication required");
+    error.status = 401;
+    throw error;
+  }
+  return verifyIdToken(token);
 };
 
 const handleError = (res, error) => {
