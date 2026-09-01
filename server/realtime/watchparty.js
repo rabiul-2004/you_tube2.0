@@ -98,7 +98,19 @@ export function setupSocket(io) {
         const room = roomId ? getRoom(roomId) : null;
         if (!room) return ack?.({ ok: false, error: "Room not found" });
         const existing = getMember(room, socket.id);
-        if (existing) return ack?.({ ok: false, error: "Already in room" });
+        if (existing) {
+          // Already a member (e.g. followed the host to a new video) — idempotent re-join.
+          socket.join(room.id);
+          return ack?.({
+            ok: true,
+            roomId: room.id,
+            videoId: room.videoId,
+            state: room.state,
+            members: listMembers(room),
+            chat: getChat(room),
+            isHost: isHost(room, socket.id),
+          });
+        }
         const member = {
           socketId: socket.id,
           name: socket.auth.name || "Guest",
@@ -134,6 +146,38 @@ export function setupSocket(io) {
     socket.on("room:leave", (ack) => {
       leaveCurrentRoom();
       ack?.({ ok: true });
+    });
+
+    socket.on("room:info", (payload, ack) => {
+      try {
+        const roomId = payload?.roomId;
+        const room = roomId ? getRoom(roomId) : null;
+        if (!room) return ack?.({ ok: false, error: "Room not found" });
+        ack?.({
+          ok: true,
+          roomId: room.id,
+          videoId: room.videoId,
+          members: listMembers(room),
+        });
+      } catch (error) {
+        ack?.({ ok: false, error: error.message });
+      }
+    });
+
+    socket.on("room:setVideo", (payload, ack) => {
+      const room = roomRef.current;
+      if (!room || !isHost(room, socket.id)) return ack?.({ ok: false });
+      const videoId = String(payload?.videoId || "");
+      if (!videoId) return ack?.({ ok: false, error: "videoId required" });
+      room.videoId = videoId;
+      room.state = { isPlaying: false, position: 0 };
+      socket.broadcast.to(room.id).emit("room:videoChange", {
+        roomId: room.id,
+        videoId,
+        by: socket.id,
+        at: Date.now(),
+      });
+      ack?.({ ok: true, videoId, state: room.state });
     });
 
     socket.on("control:play", (payload, ack) => {

@@ -3,6 +3,7 @@ import RelatedVideos from "@/components/RelatedVideos";
 import VideoInfo from "@/components/VideoInfo";
 import Videopplayer, { VideoPlayerHandle } from "@/components/Videopplayer";
 import WatchPartyDialog from "@/components/WatchPartyDialog";
+import { useWatchParty } from "@/lib/WatchPartyProvider";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
@@ -51,6 +52,28 @@ const WatchPage = () => {
   const [partyCode, setPartyCode] = useState<string | null>(null);
   const openPartyOnLoadRef = useRef(true);
   const playerRef = useRef<VideoPlayerHandle | null>(null);
+  const party = useWatchParty();
+
+  // Tell the session-wide room which video the host is currently on.
+  useEffect(() => {
+    if (!videos) return;
+    if (party.state.roomId && party.state.isHost) {
+      const vid = videos?._id;
+      if (vid) party.setVideo(vid);
+    }
+  }, [videos, party.state.roomId, party.state.isHost, party.setVideo]);
+
+  const isGuestLocked = !!(party.state.roomId && !party.state.isHost);
+
+  // Pull a guest back to the room's current video if they navigated elsewhere.
+  useEffect(() => {
+    if (!party.state.roomId || !party.state.videoId) return;
+    if (party.state.isHost) return;
+    const v = Array.isArray(id) ? id[0] : id;
+    if (v && v !== party.state.videoId) {
+      router.replace(`/watch/${party.state.videoId}?party=${party.state.roomId}`);
+    }
+  }, [party.state.roomId, party.state.videoId, party.state.isHost, id, router]);
 
   const allVideos = video || [];
   const currentIndex = allVideos.findIndex((v: any) => v._id === id);
@@ -66,11 +89,16 @@ const WatchPage = () => {
     if (!openPartyOnLoadRef.current) return;
     const code = router.query.party;
     if (typeof code === "string") {
+      // Already in this room (e.g. followed the host to a new video)?
+      // If so, just sync quietly without reopening the dialog.
+      if (party.state.roomId && party.state.roomId === code) {
+        return;
+      }
       setPartyCode(code);
       setPartyOpen(true);
       openPartyOnLoadRef.current = false;
     }
-  }, [loading, router.query.party, videos]);
+  }, [loading, router.query.party, videos, party.state.roomId]);
 
   const handleNextVideo = (nextId: string) => {
     router.push(`/watch/${nextId}`);
@@ -149,6 +177,7 @@ const WatchPage = () => {
                 video={videos}
                 nextVideo={nextVideo}
                 onNextVideo={handleNextVideo}
+                lockControls={isGuestLocked}
               />
             )}
             <div className="flex items-center gap-2">

@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import Channeldialogue from "./channeldialogue";
 import ProfileEditDialog from "./ProfileEditDialog";
 import SignInDialog from "./SignInDialog";
+import WatchPartyJoinDialog from "./WatchPartyJoinDialog";
 import { useRouter } from "next/router";
 import { useUser } from "@/lib/AuthContext";
 import { hasActivePaidPlan } from "@/lib/planUtils";
@@ -34,6 +35,7 @@ const Header = ({
   const [isdialogeopen, setisdialogeopen] = useState(false);
   const [issigninopen, setissigninopen] = useState(false);
   const [isprofileopen, setisprofileopen] = useState(false);
+  const [isPartyJoinOpen, setIsPartyJoinOpen] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const router = useRouter();
@@ -208,7 +210,8 @@ const Header = ({
                 variant="ghost"
                 size="icon"
                 className="hidden sm:flex h-9 w-9 touch-target"
-                aria-label="Create video"
+                aria-label="Join a watch party"
+                onClick={() => setIsPartyJoinOpen(true)}
               >
                 <VideoIcon className="w-5 h-5 sm:w-6 sm:h-6" />
               </Button>
@@ -337,6 +340,10 @@ const Header = ({
         onclose={() => setisprofileopen(false)}
       />
       <SignInDialog isopen={issigninopen} onclose={() => setissigninopen(false)} />
+      <WatchPartyJoinDialog
+        open={isPartyJoinOpen}
+        onOpenChange={setIsPartyJoinOpen}
+      />
     </header>
   );
 };

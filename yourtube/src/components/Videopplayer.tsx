@@ -33,6 +33,7 @@ interface VideoPlayerProps {
   };
   nextVideo?: { _id: string; videotitle: string } | null;
   onNextVideo?: (id: string) => void;
+  lockControls?: boolean;
 }
 
 export interface VideoPlayerHandle {
@@ -44,7 +45,7 @@ export interface VideoPlayerHandle {
 }
 
 export default forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPlayer(
-  { video, nextVideo, onNextVideo },
+  { video, nextVideo, onNextVideo, lockControls = false },
   ref
 ) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -133,14 +134,14 @@ export default forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPla
 
   const togglePlay = useCallback(() => {
     const el = videoRef.current;
-    if (!el) return;
+    if (!el || lockControls) return;
     if (el.paused) {
       el.play();
     } else {
       el.pause();
     }
     showControlsTemporarily();
-  }, [showControlsTemporarily]);
+  }, [showControlsTemporarily, lockControls]);
 
   useImperativeHandle(
     ref,
@@ -169,7 +170,7 @@ export default forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPla
   const seekBy = useCallback(
     (seconds: number) => {
       const el = videoRef.current;
-      if (!el) return;
+      if (!el || lockControls) return;
       el.currentTime = Math.min(
         Math.max(el.currentTime + seconds, 0),
         el.duration || 0
@@ -177,7 +178,7 @@ export default forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPla
       setCurrentTime(el.currentTime);
       showControlsTemporarily();
     },
-    [showControlsTemporarily]
+    [showControlsTemporarily, lockControls]
   );
 
   const handleDoubleTap = useCallback(
@@ -225,12 +226,12 @@ export default forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPla
   const seekTo = useCallback(
     (percent: number) => {
       const el = videoRef.current;
-      if (!el || !duration) return;
+      if (!el || !duration || lockControls) return;
       el.currentTime = (percent / 100) * duration;
       setCurrentTime(el.currentTime);
       showControlsTemporarily();
     },
-    [duration, showControlsTemporarily]
+    [duration, showControlsTemporarily, lockControls]
   );
 
   const toggleMute = useCallback(() => {
@@ -394,6 +395,14 @@ export default forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPla
             <Play className="w-10 h-10 text-white fill-white" />
           </div>
         </button>
+      )}
+
+      {lockControls && (
+        <div className="absolute top-3 left-3 pointer-events-none">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-white bg-black/60 backdrop-blur-sm rounded-full px-3 py-1">
+            Following host
+          </span>
+        </div>
       )}
 
       {doubleTapFeedback && (
