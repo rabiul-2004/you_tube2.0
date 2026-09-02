@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { formatDistanceToNow } from "date-fns";
 import { MoreVertical, X, Clock, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +13,7 @@ import {
 import axiosInstance from "@/lib/axiosinstance";
 import VideoThumb from "./VideoThumb";
 import { useUser } from "@/lib/AuthContext";
-import { safeDate } from "@/lib/videoUtils";
+import { relativeTime } from "@/lib/videoUtils";
 
 export default function WatchLaterContent() {
   const [watchLater, setWatchLater] = useState<any[]>([]);
@@ -108,10 +106,10 @@ export default function WatchLaterContent() {
               </p>
               <p className="text-sm text-muted-foreground">
                 {item.videoid.views.toLocaleString()} views •{" "}
-                {safeDate(item.videoid.createdAt) ? <>{formatDistanceToNow(safeDate(item.videoid.createdAt)!)} ago</> : null}
+                {relativeTime(item.videoid.createdAt)}
               </p>
               <p className="text-xs text-muted-foreground/70 mt-1">
-                Added {safeDate(item.createdAt) ? <>{formatDistanceToNow(safeDate(item.createdAt)!)} ago</> : null}
+                Added {relativeTime(item.createdAt)}
               </p>
             </div>
 

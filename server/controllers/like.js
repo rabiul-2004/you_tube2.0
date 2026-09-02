@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import video from "../Modals/video.js";
 import like from "../Modals/like.js";
 import dislike from "../Modals/dislike.js";
+import { ensureOwnsUser } from "../middleware/auth.js";
 
 export const handlelike = async (req, res) => {
   const { videoId } = req.params;
@@ -94,9 +95,7 @@ export const deletelike = async (req, res) => {
 
 export const getallLikedVideo = async (req, res) => {
   const { userId } = req.params;
-  if (req.user._id.toString() !== userId) {
-    return res.status(403).json({ message: "Access denied" });
-  }
+  if (!ensureOwnsUser(req, res, userId)) return;
   try {
     const likevideo = await like
       .find({ viewer: userId })

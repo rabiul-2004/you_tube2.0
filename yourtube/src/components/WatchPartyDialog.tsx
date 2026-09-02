@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Users, Video, Copy, Link2, LogOut, Loader2, MessageSquare } from "lucide-react";
+import { Users, Video, Copy, Link2, LogOut, Loader2, MessageSquare, Send } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import type { VideoPlayerHandle } from "@/components/Videopplayer";
 import { useWatchParty } from "@/lib/WatchPartyProvider";
 import { useUser } from "@/lib/AuthContext";
+import { formatChatTime } from "@/lib/videoUtils";
 
 interface WatchPartyDialogProps {
   videoId: string;
@@ -36,7 +37,22 @@ export default function WatchPartyDialog({
   const party = useWatchParty();
   const [joinCode, setJoinCode] = useState("");
   const [connectError, setConnectError] = useState<string | null>(null);
+  const [chatText, setChatText] = useState("");
+  const [tab, setTab] = useState<"people" | "chat">("people");
   const autoJoined = useRef(false);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll chat to the newest message
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [party.state.chat]);
+
+  const handleSend = () => {
+    const text = chatText.trim();
+    if (!text) return;
+    party.sendChat(text);
+    setChatText("");
+  };
 
   // Expose the current video's player to the session-wide provider
   useEffect(() => {
@@ -99,14 +115,10 @@ export default function WatchPartyDialog({
         </DialogHeader>
 
         {connectError && (
-          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-            {connectError}
-          </div>
+          <ErrorBanner>{connectError}</ErrorBanner>
         )}
         {!connectError && party.state.error && !party.state.roomId && (
-          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-            {party.state.error}
-          </div>
+          <ErrorBanner>{party.state.error}</ErrorBanner>
         )}
 
         {!party.state.roomId && (
@@ -166,56 +178,144 @@ export default function WatchPartyDialog({
         )}
 
         {party.state.roomId && (
-          <div className="flex flex-col gap-4">
-            <div className="rounded-lg border p-3">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-sm font-medium">Invite friends</p>
-                  <p className="text-xs text-muted-foreground truncate max-w-[220px]">
-                    {party.roomUrl}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="secondary" size="sm" onClick={copyLink}>
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                  <Button variant="secondary" size="sm" onClick={() => navigator.clipboard?.writeText(party.state.roomId || "")}>
-                    <Link2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+          <div className="flex flex-col gap-3">
+            <div className="flex rounded-lg border bg-muted/40 p-0.5">
+              {(
+                [
+                  { key: "people", label: "People", icon: Users },
+                  { key: "chat", label: "Chat", icon: MessageSquare },
+                ] as const
+              ).map(({ key, label, icon: Icon }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setTab(key)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    tab === key
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" /> {label}
+                  {key === "chat" && party.state.chat.length > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-primary/15 text-primary text-[11px]">
+                      {party.state.chat.length}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
 
-            <div>
-              <p className="text-sm font-medium mb-2 flex items-center gap-1.5">
-                <Users className="w-4 h-4" /> Participants ({party.state.members.length})
-              </p>
-              <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1">
-                {party.state.members.map((m) => (
-                  <div key={m.socketId} className="flex items-center gap-2 text-sm">
-                    <Avatar className="w-8 h-8">
-                      {m.image ? <AvatarImage src={m.image} /> : null}
-                      <AvatarFallback>{(m.name || "?").charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium flex-1 truncate">{m.name || "Guest"}</span>
-                    {m.isHost && (
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">host</span>
-                    )}
+            {tab === "people" && (
+              <div className="flex flex-col gap-4">
+                <div className="rounded-lg border p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium">Invite friends</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-[220px]">
+                        {party.roomUrl}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="secondary" size="sm" onClick={copyLink}>
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={() => navigator.clipboard?.writeText(party.state.roomId || "")}>
+                        <Link2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                ))}
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                    <Users className="w-4 h-4" /> Participants ({party.state.members.length})
+                  </p>
+                  <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1">
+                    {party.state.members.map((m) => (
+                      <div key={m.socketId} className="flex items-center gap-2 text-sm">
+                        <Avatar className="w-8 h-8">
+                          {m.image ? <AvatarImage src={m.image} /> : null}
+                          <AvatarFallback>{(m.name || "?").charAt(0).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium flex-1 truncate">{m.name || "Guest"}</span>
+                        {m.isHost && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">host</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  {party.state.isHost
+                    ? "You are the host. Your playback controls the room."
+                    : "Follow the host's playback. Playback controls are locked except mute."}
+                </p>
+
+                <Button variant="destructive" onClick={handleLeave} className="w-full">
+                  <LogOut className="w-4 h-4" /> Leave watch party
+                </Button>
               </div>
-            </div>
+            )}
 
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <MessageSquare className="w-3.5 h-3.5" />
-              {party.state.isHost
-                ? "You are the host. Your playback controls the room."
-                : "Follow the host's playback. Playback controls are locked except mute."}
-            </p>
-
-            <Button variant="destructive" onClick={handleLeave} className="w-full">
-              <LogOut className="w-4 h-4" /> Leave watch party
-            </Button>
+            {tab === "chat" && (
+              <div className="flex flex-col">
+                <div className="rounded-lg border flex-1 flex flex-col min-h-[260px]">
+                  <div className="flex flex-col gap-2 h-56 overflow-y-auto p-3 flex-1">
+                    {party.state.chat.length === 0 ? (
+                      <p className="text-xs text-muted-foreground m-auto">
+                        No messages yet. Say hi!
+                      </p>
+                    ) : (
+                      party.state.chat.map((msg) => (
+                        <div key={msg.id} className="flex gap-2 items-start text-sm">
+                          <Avatar className="w-6 h-6 shrink-0">
+                            {msg.image ? <AvatarImage src={msg.image} /> : null}
+                            <AvatarFallback>{(msg.name || "?").charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-baseline gap-2">
+                              <span className="font-medium text-xs">{msg.name || "Guest"}</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {formatChatTime(msg.at)}
+                              </span>
+                            </div>
+                            <p className="text-sm leading-snug break-words">{msg.text}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+                  <form
+                    className="flex gap-2 border-t p-2"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSend();
+                    }}
+                  >
+                    <Input
+                      placeholder="Message"
+                      value={chatText}
+                      onChange={(e) => setChatText(e.target.value)}
+                      maxLength={1000}
+                      className="h-9"
+                    />
+                    <Button
+                      type="submit"
+                      size="icon"
+                      className="h-9 w-9 shrink-0"
+                      disabled={!chatText.trim()}
+                      aria-label="Send message"
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -224,5 +324,13 @@ export default function WatchPartyDialog({
         </p>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ErrorBanner({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+      {children}
+    </div>
   );
 }

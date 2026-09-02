@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import subscription from "../Modals/subscription.js";
+import { ensureOwnsUser } from "../middleware/auth.js";
 
 export const togglesubscribe = async (req, res) => {
   const { channelId } = req.params;
@@ -60,9 +61,7 @@ export const getsubscriberinfo = async (req, res) => {
 
 export const getsubscribedchannels = async (req, res) => {
   const { userId } = req.params;
-  if (req.user._id.toString() !== userId) {
-    return res.status(403).json({ message: "Access denied" });
-  }
+  if (!ensureOwnsUser(req, res, userId)) return;
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json({ message: "Invalid user" });
   }

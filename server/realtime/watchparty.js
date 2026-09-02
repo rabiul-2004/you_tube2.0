@@ -32,6 +32,15 @@ export function setupSocket(io) {
   io.on("connection", (socket) => {
     const roomRef = { current: null };
 
+    const buildMember = (isHost) => ({
+      socketId: socket.id,
+      name: socket.auth.name || "Guest",
+      image: socket.auth.picture || "",
+      isHost,
+      micOn: false,
+      camOn: false,
+    });
+
     const leaveCurrentRoom = () => {
       const room = roomRef.current;
       if (!room) return;
@@ -68,14 +77,7 @@ export function setupSocket(io) {
           hostId: socket.id,
           videoId: String(videoId),
         });
-        const member = {
-          socketId: socket.id,
-          name: socket.auth.name || "Guest",
-          image: socket.auth.picture || "",
-          isHost: true,
-          micOn: false,
-          camOn: false,
-        };
+        const member = buildMember(true);
         roomRef.current = room;
         addMember(room, socket.id, member);
         socket.join(room.id);
@@ -111,14 +113,7 @@ export function setupSocket(io) {
             isHost: isHost(room, socket.id),
           });
         }
-        const member = {
-          socketId: socket.id,
-          name: socket.auth.name || "Guest",
-          image: socket.auth.picture || "",
-          isHost: false,
-          micOn: false,
-          camOn: false,
-        };
+        const member = buildMember(false);
         roomRef.current = room;
         addMember(room, socket.id, member);
         socket.join(room.id);

@@ -1,5 +1,6 @@
 import watchlater from "../Modals/watchlater.js";
 import mongoose from "mongoose";
+import { ensureOwnsUser } from "../middleware/auth.js";
 
 export const handlewatchlater = async (req, res) => {
   const { videoId } = req.params;
@@ -46,9 +47,7 @@ export const deletewatchlater = async (req, res) => {
 
 export const getallwatchlater = async (req, res) => {
   const { userId } = req.params;
-  if (req.user._id.toString() !== userId) {
-    return res.status(403).json({ message: "Access denied" });
-  }
+  if (!ensureOwnsUser(req, res, userId)) return;
   try {
     const watchlatervideo = await watchlater
       .find({ viewer: userId })

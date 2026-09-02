@@ -91,9 +91,3 @@ export async function getSocket(): Promise<Socket> {
 
   return connecting;
 }
-
-export function closeSocket() {
-  socket?.disconnect();
-  socket = null;
-  connecting = null;
-}

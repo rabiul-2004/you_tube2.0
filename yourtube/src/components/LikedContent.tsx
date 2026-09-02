@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { formatDistanceToNow } from "date-fns";
 import { MoreVertical, X, ThumbsUp, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +13,7 @@ import {
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import VideoThumb from "./VideoThumb";
-import { safeDate } from "@/lib/videoUtils";
+import { relativeTime } from "@/lib/videoUtils";
 
 export default function LikedVideosContent() {
   const [likedVideos, setLikedVideos] = useState<any[]>([]);
@@ -108,10 +106,10 @@ export default function LikedVideosContent() {
               </p>
               <p className="text-sm text-muted-foreground">
                 {item.videoid.views.toLocaleString()} views •{" "}
-                {safeDate(item.videoid.createdAt) ? <>{formatDistanceToNow(safeDate(item.videoid.createdAt)!)} ago</> : null}
+                {relativeTime(item.videoid.createdAt)}
               </p>
               <p className="text-xs text-muted-foreground/70 mt-1">
-                Liked {safeDate(item.createdAt) ? <>{formatDistanceToNow(safeDate(item.createdAt)!)} ago</> : null}
+                Liked {relativeTime(item.createdAt)}
               </p>
             </div>
 

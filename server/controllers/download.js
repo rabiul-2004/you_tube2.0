@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import download from "../Modals/download.js";
+import { ensureOwnsUser } from "../middleware/auth.js";
 
 const DAILY_LIMITS = {
   Free: 1,
@@ -79,10 +80,7 @@ export const getDownloadHistory = async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json({ message: "Invalid user ID" });
   }
-  if (req.user._id.toString() !== userId) {
-    return res.status(403).json({ message: "Access denied" });
-  }
-
+  if (!ensureOwnsUser(req, res, userId)) return;
   try {
     const downloads = await download
       .find({ user: userId })

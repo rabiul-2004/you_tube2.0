@@ -108,3 +108,10 @@ export const requireVerified = (req, res, next) => {
   }
   next();
 };
+
+export const ensureOwnsUser = (req, res, userId) => {
+  if (req.user?._id.toString() !== userId) {
+    return res.status(403).json({ message: "Access denied" });
+  }
+  return true;
+};

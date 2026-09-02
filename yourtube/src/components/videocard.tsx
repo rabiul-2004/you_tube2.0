@@ -1,10 +1,10 @@
 "use client";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { getVideoUrl } from "@/lib/cloudinary";
-import { formatDuration, safeDate } from "@/lib/videoUtils";
+import { relativeTime } from "@/lib/videoUtils";
 import { useState, useRef, useEffect } from "react";
+import DurationBadge from "./ui/duration-badge";
 
 export default function VideoCard({ video }: any) {
   const [loaded, setLoaded] = useState(false);
@@ -64,10 +64,8 @@ export default function VideoCard({ video }: any) {
                   onLoad={() => setThumbLoaded(true)}
                   onError={() => setThumbError(true)}
                 />
-                {thumbLoaded && !thumbError && formatDuration(video.duration) && (
-                  <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[11px] px-1 rounded font-medium">
-                    {formatDuration(video.duration)}
-                  </div>
+                {thumbLoaded && !thumbError && (
+                  <DurationBadge seconds={video.duration} className="bottom-1.5 right-1.5" />
                 )}
               </>
             ) : !error ? (
@@ -94,10 +92,8 @@ export default function VideoCard({ video }: any) {
                 Video unavailable
               </div>
             )}
-            {!video?.thumbnail && formatDuration(duration) && (
-              <div className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[11px] px-1 rounded font-medium">
-                {formatDuration(duration)}
-              </div>
+            {!video?.thumbnail && (
+              <DurationBadge seconds={duration} className="bottom-1.5 right-1.5" />
             )}
           </div>
         <div className="flex gap-2 sm:gap-3 px-0.5 sm:px-1">
@@ -115,8 +111,7 @@ export default function VideoCard({ video }: any) {
               {video?.videochanel}
             </p>
             <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">
-              {video?.views?.toLocaleString()} views •{" "}
-              {safeDate(video?.createdAt) ? <>{formatDistanceToNow(safeDate(video?.createdAt)!)} ago</> : null}
+              {video?.views?.toLocaleString()} views • {relativeTime(video?.createdAt)}
             </p>
           </div>
         </div>

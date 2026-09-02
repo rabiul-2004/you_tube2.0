@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -9,7 +9,6 @@ import {
   ThumbsDown,
   ThumbsUp,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { useSubscribe } from "@/lib/useSubscribe";
@@ -17,7 +16,7 @@ import { formatCount } from "@/lib/formatCount";
 import { getVideoUrl } from "@/lib/cloudinary";
 import { toast } from "sonner";
 import Link from "next/link";
-import { safeDate } from "@/lib/videoUtils";
+import { relativeTime } from "@/lib/videoUtils";
 
 const VideoInfo = ({ video }: any) => {
   const [likes, setlikes] = useState(video.Like || 0);
@@ -279,7 +278,7 @@ const VideoInfo = ({ video }: any) => {
       <div className="bg-secondary rounded-lg p-4 transition-all duration-200 hover:bg-secondary/70">
         <div className="flex gap-4 text-sm font-medium mb-2">
           <span>{video.views?.toLocaleString()} views</span>
-          <span>{safeDate(video.createdAt) ? <>{formatDistanceToNow(safeDate(video.createdAt)!)} ago</> : null}</span>
+          <span>{relativeTime(video.createdAt)}</span>
         </div>
         <div className={`text-sm text-foreground/70 break-words [overflow-wrap:anywhere] ${showFullDescription ? "" : "line-clamp-3"}`}>
           <p>{video.description || "No description"}</p>

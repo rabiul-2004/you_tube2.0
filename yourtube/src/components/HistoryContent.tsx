@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
 import { MoreVertical, X, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +13,7 @@ import {
 import axiosInstance from "@/lib/axiosinstance";
 import { useUser } from "@/lib/AuthContext";
 import VideoThumb from "./VideoThumb";
-import { safeDate } from "@/lib/videoUtils";
+import { relativeTime } from "@/lib/videoUtils";
 
 export default function HistoryContent() {
   const [history, setHistory] = useState<any[]>([]);
@@ -116,10 +115,10 @@ export default function HistoryContent() {
               <p className="text-sm text-muted-foreground">{item.videoid.videochanel}</p>
               <p className="text-sm text-muted-foreground">
                 {item.videoid.views.toLocaleString()} views •{" "}
-                {safeDate(item.videoid.createdAt) ? <>{formatDistanceToNow(safeDate(item.videoid.createdAt)!)} ago</> : null}
+                {relativeTime(item.videoid.createdAt)}
               </p>
               <p className="text-xs text-muted-foreground/70 mt-1">
-                Watched {safeDate(item.updatedAt) ? <>{formatDistanceToNow(safeDate(item.updatedAt)!)} ago</> : null}
+                Watched {relativeTime(item.updatedAt)}
               </p>
             </div>
 

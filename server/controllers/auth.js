@@ -3,6 +3,7 @@ import users from "../Modals/Auth.js";
 import video from "../Modals/video.js";
 import { generateOTP, sendOtpEmail } from "../helpers/email.js";
 import { deleteFromCloudinary } from "../helpers/cloudinary.js";
+import { ensureOwnsUser } from "../middleware/auth.js";
 
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
@@ -136,9 +137,7 @@ export const verifyOtp = async (req, res) => {
 
 export const getTheme = async (req, res) => {
   const { userId } = req.params;
-  if (req.user._id.toString() !== userId) {
-    return res.status(403).json({ message: "Access denied" });
-  }
+  if (!ensureOwnsUser(req, res, userId)) return;
   try {
     const user = await users.findById(userId).select("theme");
     if (!user) {
@@ -155,9 +154,7 @@ export const getTheme = async (req, res) => {
 export const setTheme = async (req, res) => {
   const { userId } = req.params;
   const { theme } = req.body;
-  if (req.user._id.toString() !== userId) {
-    return res.status(403).json({ message: "Access denied" });
-  }
+  if (!ensureOwnsUser(req, res, userId)) return;
   if (!["light", "dark", "auto"].includes(theme)) {
     return res.status(400).json({ message: "Invalid theme. Use light, dark, or auto." });
   }

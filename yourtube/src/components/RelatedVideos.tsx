@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
 import VideoThumb from "./VideoThumb";
-import { safeDate } from "@/lib/videoUtils";
+import { relativeTime } from "@/lib/videoUtils";
 
 interface RelatedVideosProps {
   videos: Array<{
@@ -37,7 +36,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
               <p className="text-xs text-muted-foreground mt-1">{video.videochanel}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {video.views?.toLocaleString()} views •{" "}
-                {safeDate(video.createdAt) ? <>{formatDistanceToNow(safeDate(video.createdAt)!)} ago</> : null}
+                {relativeTime(video.createdAt)}
               </p>
             </div>
           </Link>

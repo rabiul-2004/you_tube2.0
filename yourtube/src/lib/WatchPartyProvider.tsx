@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/router";
 import { getSocket } from "./watchparty";
+import { useUser } from "./AuthContext";
 import type { Socket } from "socket.io-client";
 import type { VideoPlayerHandle } from "@/components/Videopplayer";
 
@@ -18,8 +19,6 @@ export interface PartyMember {
   name: string;
   image: string;
   isHost: boolean;
-  micOn?: boolean;
-  camOn?: boolean;
 }
 
 export interface PartyChatMessage {
@@ -49,7 +48,6 @@ interface PartyApi {
   leaveRoom: () => void;
   setVideo: (videoId: string) => void;
   sendChat: (text: string) => void;
-  setMedia: (micOn: boolean, camOn: boolean) => void;
   registerPlayer: (ref: React.RefObject<VideoPlayerHandle | null> | null) => void;
 }
 
@@ -61,6 +59,7 @@ const ACK_TIMEOUT_MS = 8000;
 
 export function WatchPartyProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { user } = useUser();
   const [state, setState] = useState<PartyState>({
     roomId: null,
     isHost: false,
@@ -99,9 +98,14 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     let cancelled = false;
+    // Wait until auth has restored before connecting, and retry once the
+    // user is available (fixes the "sign-in required" race right after login).
     ensureSocket()
       .then((s) => {
-        if (!cancelled) setSocket(s);
+        if (!cancelled) {
+          setSocket(s);
+          if (stateRef.current.error) update({ error: null });
+        }
       })
       .catch((e) => {
         if (!cancelled) {
@@ -112,8 +116,9 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
     return () => {
       cancelled = true;
     };
+    // Re-run when the user first becomes available so a late sign-in retries.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [Boolean(user)]);
 
   const createRoom = useCallback(
     (videoId: string, ack?: (ok: boolean, roomId?: string) => void) => {
@@ -227,13 +232,6 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
     (text: string) => {
       if (!socketRef.current || !text.trim()) return;
       socketRef.current.emit("chat:message", { text });
-    },
-    []
-  );
-
-  const setMedia = useCallback(
-    (micOn: boolean, camOn: boolean) => {
-      socketRef.current?.emit("media:toggle", { micOn, camOn });
     },
     []
   );
@@ -385,7 +383,6 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
     leaveRoom,
     setVideo,
     sendChat,
-    setMedia,
     registerPlayer,
   };
 

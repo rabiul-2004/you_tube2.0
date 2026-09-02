@@ -1,6 +1,7 @@
 import video from "../Modals/video.js";
 import history from "../Modals/history.js";
 import mongoose from "mongoose";
+import { ensureOwnsUser } from "../middleware/auth.js";
 
 export const handlehistory = async (req, res) => {
   const { videoId } = req.params;
@@ -45,9 +46,7 @@ export const deletehistory = async (req, res) => {
 };
 export const getallhistoryVideo = async (req, res) => {
   const { userId } = req.params;
-  if (req.user._id.toString() !== userId) {
-    return res.status(403).json({ message: "Access denied" });
-  }
+  if (!ensureOwnsUser(req, res, userId)) return;
   try {
     const historyvideo = await history
       .find({ viewer: userId })

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
 import { MoreVertical, X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +13,7 @@ import {
 import axiosInstance from "@/lib/axiosinstance";
 import { useUser } from "@/lib/AuthContext";
 import { getVideoUrl } from "@/lib/cloudinary";
-import { safeDate } from "@/lib/videoUtils";
+import { relativeTime } from "@/lib/videoUtils";
 import VideoThumb from "./VideoThumb";
 
 export default function DownloadsContent() {
@@ -128,10 +127,10 @@ export default function DownloadsContent() {
               <p className="text-sm text-muted-foreground">{item.video.videochanel}</p>
               <p className="text-sm text-muted-foreground">
                 {item.video.views?.toLocaleString()} views
-                {safeDate(item.video?.createdAt) && <> • {formatDistanceToNow(safeDate(item.video.createdAt)!)} ago</>}
+                {relativeTime(item.video?.createdAt) && <> • {relativeTime(item.video?.createdAt)}</>}
               </p>
               <p className="text-xs text-muted-foreground/70 mt-1">
-                Downloaded {safeDate(item.createdAt) ? <>{formatDistanceToNow(safeDate(item.createdAt)!)} ago</> : "recently"} • {item.plan}
+                Downloaded {relativeTime(item.createdAt) ?? "recently"} • {item.plan}
               </p>
             </div>
 

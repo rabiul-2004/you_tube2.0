@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { getVideoUrl } from "@/lib/cloudinary";
-import { formatDuration } from "@/lib/videoUtils";
+import DurationBadge from "./ui/duration-badge";
 
 export default function VideoThumb({
   filepath,
@@ -22,7 +22,6 @@ export default function VideoThumb({
   };
 
   const effectiveDuration = duration && duration > 0 ? duration : metaDuration;
-  const formatted = formatDuration(effectiveDuration);
   const showImage = !!thumbnail && !imgFailed;
 
   return (
@@ -50,11 +49,7 @@ export default function VideoThumb({
           Unavailable
         </div>
       )}
-      {formatted && (
-        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[11px] px-1 rounded font-medium">
-          {formatted}
-        </div>
-      )}
+      <DurationBadge seconds={effectiveDuration} className="bottom-1 right-1" />
     </div>
   );
 }

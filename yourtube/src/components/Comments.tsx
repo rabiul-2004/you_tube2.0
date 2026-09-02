@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
@@ -10,10 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { formatDistanceToNow } from "date-fns";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
-import { safeDate } from "@/lib/videoUtils";
+import { relativeTime } from "@/lib/videoUtils";
 import { toast } from "sonner";
 import {
   Check,
@@ -550,11 +549,7 @@ const Comments = ({ videoId, isOwner }: { videoId: string; isOwner?: boolean }) 
                       {comment.usercommented}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {safeDate(comment.commentedon) ? (
-                        <>
-                          {formatDistanceToNow(safeDate(comment.commentedon)!)} ago
-                        </>
-                      ) : null}
+                      {relativeTime(comment.commentedon)}
                     </span>
                     {comment.language && (
                       <span className="text-[10px] uppercase tracking-wide bg-secondary px-1.5 py-0.5 rounded">

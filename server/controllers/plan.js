@@ -4,6 +4,7 @@ import Razorpay from "razorpay";
 import users from "../Modals/Auth.js";
 import payment from "../Modals/payment.js";
 import { sendInvoiceEmail } from "../helpers/email.js";
+import { ensureOwnsUser } from "../middleware/auth.js";
 
 const PLANS = {
   Bronze: { amount: 100, currency: "INR", durationDays: 30 },
@@ -160,9 +161,7 @@ export const verifyPayment = async (req, res) => {
 
 export const getPlanStatus = async (req, res) => {
   const { userId } = req.params;
-  if (req.user._id.toString() !== userId) {
-    return res.status(403).json({ message: "Access denied" });
-  }
+  if (!ensureOwnsUser(req, res, userId)) return;
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json({ message: "Invalid user" });
   }
