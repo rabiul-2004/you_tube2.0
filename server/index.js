@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import { Server } from "socket.io";
 import { setupSocket } from "./realtime/watchparty.js";
-import { startPeerServer } from "./realtime/peer.js";
+import { mountPeerServer } from "./realtime/peer.js";
 import userroutes from "./routes/auth.js";
 import videoroutes from "./routes/video.js";
 import likeroutes from "./routes/like.js";
@@ -74,8 +74,11 @@ app.use("/plan", planroutes);
 app.use("/subscribe", subscriberoutes);
 app.use("/download", downloadroutes);
 const PORT = process.env.PORT || 5000;
-const PEER_PORT = process.env.PEER_PORT || 9000;
 const DBURL = process.env.DB_URL;
+
+if (process.env.ENABLE_PEER !== "false") {
+  mountPeerServer(app, httpServer);
+}
 
 mongoose
   .connect(DBURL)
@@ -84,9 +87,6 @@ mongoose
     httpServer.listen(PORT, () => {
       console.log(`server running on port ${PORT}`);
     });
-    if (process.env.ENABLE_PEER !== "false") {
-      startPeerServer(PEER_PORT);
-    }
   })
   .catch((error) => {
     console.log(error);

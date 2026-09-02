@@ -152,8 +152,11 @@ export function useWatchPartyCall(params: {
         host: peerConfig.host,
         port: peerConfig.port,
         path: peerConfig.path,
-        secure: typeof window !== "undefined" && window.location.protocol === "https:",
+        secure: peerConfig.secure,
         debug: 0,
+        config: {
+          iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+        },
       });
       peerRef.current = peer;
 

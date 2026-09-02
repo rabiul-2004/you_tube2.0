@@ -13,14 +13,25 @@ export const getSocketUrl = () => {
 
 export const getPeerUrl = () => {
   if (typeof window === "undefined") return null;
-  const host =
+  // PeerServer is now mounted on the backend's own HTTP server under /peer
+  // (single port = deployable on Render/Vercel/free tiers). Explicit override:
+  // NEXT_PUBLIC_PEER_URL (http(s)://host[:port]) for advanced setups.
+  const detected =
     (process.env.NEXT_PUBLIC_PEER_URL as string) ||
-    `${window.location.hostname}:9000`;
-  return {
-    host: host.split(":")[0],
-    port: Number(host.split(":")[1] || 9000),
-    path: "/",
-  };
+    (process.env.NEXT_PUBLIC_BACKEND_URL as string) ||
+    `${window.location.protocol}//${window.location.hostname}:5000`;
+  const raw = detected.includes("://") ? detected : `http://${detected}`;
+  try {
+    const url = new URL(raw);
+    return {
+      host: url.hostname,
+      port: url.port ? Number(url.port) : url.protocol === "https:" ? 443 : 80,
+      path: "/peer",
+      secure: url.protocol === "https:",
+    };
+  } catch {
+    return { host: "localhost", port: 5000, path: "/peer", secure: false };
+  }
 };
 
 export async function getSocket(): Promise<Socket> {
@@ -55,20 +66,38 @@ export async function getSocket(): Promise<Socket> {
         auth: { token },
         transports: ["websocket", "polling"],
         reconnection: true,
-        reconnectionAttempts: 2,
+        reconnectionAttempts: 3,
         timeout: 15000,
       });
 
-      const onConnect = () => {
+      let settled = false;
+      let lastError: string | null = null;
+      let failTimer: ReturnType<typeof setTimeout> | null = null;
+
+      const finish = (onSettle: () => void) => {
+        if (settled) return;
+        settled = true;
+        if (failTimer) {
+          clearTimeout(failTimer);
+          failTimer = null;
+        }
         cleanup();
-        resolve(s);
+        onSettle();
       };
+
+      const onConnect = () => finish(() => resolve(s));
       const onConnectError = (err: Error & { description?: string; type?: string }) => {
-        cleanup();
-        const detail =
-          err?.message || err?.description || "Could not connect to the watch party server";
-        console.error("[watchparty] socket connect_error:", err);
-        reject(new Error(detail));
+        // A single transport failure (e.g. the flaky ws:// upgrade during local
+        // dev) is NOT fatal: engine.io still tries the next transport in the
+        // list (polling) and socket.io keeps reconnecting. Only give up if
+        // nothing has connected within the deadline, otherwise callers reject
+        // while the socket goes on to connect fine moments later.
+        lastError = err?.message || err?.description || "Could not connect to the watch party server";
+        if (!failTimer) {
+          failTimer = setTimeout(() => {
+            finish(() => reject(new Error(lastError || "Could not connect to the watch party server")));
+          }, 6000);
+        }
       };
       const cleanup = () => {
         s.off("connect", onConnect);
