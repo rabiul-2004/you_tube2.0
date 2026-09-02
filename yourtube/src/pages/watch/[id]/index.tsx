@@ -3,6 +3,7 @@ import RelatedVideos from "@/components/RelatedVideos";
 import VideoInfo from "@/components/VideoInfo";
 import Videopplayer, { VideoPlayerHandle } from "@/components/Videopplayer";
 import WatchPartyDialog from "@/components/WatchPartyDialog";
+import WatchPartyDock from "@/components/WatchPartyDock";
 import { useWatchParty } from "@/lib/WatchPartyProvider";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/lib/AuthContext";
@@ -198,6 +199,7 @@ const WatchPage = () => {
                 onOpenChange={setPartyOpen}
                 initialCode={partyCode}
               />
+              <WatchPartyDock onOpenDialog={() => setPartyOpen(true)} />
             </div>
             <VideoInfo video={videos} />
             <Comments

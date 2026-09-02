@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Users, Video, Copy, Link2, LogOut, Loader2, MessageSquare, Send } from "lucide-react";
+import { Users, Video, Copy, Link2, LogOut, Loader2, MessageSquare, Send, PhoneCall, Mic, MicOff, VideoOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,7 @@ import type { VideoPlayerHandle } from "@/components/Videopplayer";
 import { useWatchParty } from "@/lib/WatchPartyProvider";
 import { useUser } from "@/lib/AuthContext";
 import { formatChatTime } from "@/lib/videoUtils";
+import WatchPartyCall from "./WatchPartyCall";
 
 interface WatchPartyDialogProps {
   videoId: string;
@@ -38,7 +39,7 @@ export default function WatchPartyDialog({
   const [joinCode, setJoinCode] = useState("");
   const [connectError, setConnectError] = useState<string | null>(null);
   const [chatText, setChatText] = useState("");
-  const [tab, setTab] = useState<"people" | "chat">("people");
+  const [tab, setTab] = useState<"people" | "chat" | "live">("people");
   const autoJoined = useRef(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -182,10 +183,11 @@ export default function WatchPartyDialog({
             <div className="flex rounded-lg border bg-muted/40 p-0.5">
               {(
                 [
-                  { key: "people", label: "People", icon: Users },
-                  { key: "chat", label: "Chat", icon: MessageSquare },
+                  { key: "people", label: "People", icon: Users, badge: 0 },
+                  { key: "live", label: "Live", icon: PhoneCall, badge: party.state.members.filter((m) => m.inCall).length },
+                  { key: "chat", label: "Chat", icon: MessageSquare, badge: party.state.chat.length },
                 ] as const
-              ).map(({ key, label, icon: Icon }) => (
+              ).map(({ key, label, icon: Icon, badge }) => (
                 <button
                   key={key}
                   type="button"
@@ -197,9 +199,9 @@ export default function WatchPartyDialog({
                   }`}
                 >
                   <Icon className="w-4 h-4" /> {label}
-                  {key === "chat" && party.state.chat.length > 0 && (
+                  {badge > 0 && (
                     <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-primary/15 text-primary text-[11px]">
-                      {party.state.chat.length}
+                      {badge}
                     </span>
                   )}
                 </button>
@@ -239,6 +241,23 @@ export default function WatchPartyDialog({
                           <AvatarFallback>{(m.name || "?").charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <span className="font-medium flex-1 truncate">{m.name || "Guest"}</span>
+                        {party.myId === m.socketId && (
+                          <span className="text-[10px] text-muted-foreground/70">(you)</span>
+                        )}
+                        {m.inCall && (
+                          <span className="flex items-center gap-1.5 text-muted-foreground">
+                            {m.micOn ? (
+                              <Mic className="w-3.5 h-3.5" />
+                            ) : (
+                              <MicOff className="w-3.5 h-3.5" />
+                            )}
+                            {m.camOn ? (
+                              <Video className="w-3.5 h-3.5" />
+                            ) : (
+                              <VideoOff className="w-3.5 h-3.5" />
+                            )}
+                          </span>
+                        )}
                         {m.isHost && (
                           <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">host</span>
                         )}
@@ -258,6 +277,14 @@ export default function WatchPartyDialog({
                   <LogOut className="w-4 h-4" /> Leave watch party
                 </Button>
               </div>
+            )}
+
+            {tab === "live" && (
+              <WatchPartyCall
+                call={party.call}
+                members={party.state.members}
+                myName={myName}
+              />
             )}
 
             {tab === "chat" && (

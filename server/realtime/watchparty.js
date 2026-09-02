@@ -39,6 +39,7 @@ export function setupSocket(io) {
       isHost,
       micOn: false,
       camOn: false,
+      inCall: false,
     });
 
     const leaveCurrentRoom = () => {
@@ -248,6 +249,35 @@ export function setupSocket(io) {
       io.to(room.id).emit("media:toggle", {
         socketId: socket.id,
         ...update,
+        members: listMembers(room),
+      });
+      ack?.({ ok: true, members: listMembers(room) });
+    });
+
+    socket.on("call:join", (ack) => {
+      const room = roomRef.current;
+      if (!room) return ack?.({ ok: false });
+      const member = getMember(room, socket.id);
+      if (!member) return ack?.({ ok: false });
+      member.inCall = true;
+      socket.broadcast.to(room.id).emit("call:join", {
+        socketId: socket.id,
+        members: listMembers(room),
+      });
+      ack?.({ ok: true, members: listMembers(room) });
+    });
+
+    socket.on("call:leave", (ack) => {
+      const room = roomRef.current;
+      if (!room) return ack?.({ ok: false });
+      const member = getMember(room, socket.id);
+      if (member) {
+        member.inCall = false;
+        member.micOn = false;
+        member.camOn = false;
+      }
+      socket.broadcast.to(room.id).emit("call:leave", {
+        socketId: socket.id,
         members: listMembers(room),
       });
       ack?.({ ok: true, members: listMembers(room) });

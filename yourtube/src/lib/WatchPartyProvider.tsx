@@ -11,6 +11,7 @@ import React, {
 import { useRouter } from "next/router";
 import { getSocket } from "./watchparty";
 import { useUser } from "./AuthContext";
+import { useWatchPartyCall } from "./useWatchPartyCall";
 import type { Socket } from "socket.io-client";
 import type { VideoPlayerHandle } from "@/components/Videopplayer";
 
@@ -19,6 +20,9 @@ export interface PartyMember {
   name: string;
   image: string;
   isHost: boolean;
+  micOn?: boolean;
+  camOn?: boolean;
+  inCall?: boolean;
 }
 
 export interface PartyChatMessage {
@@ -43,6 +47,8 @@ export interface PartyState {
 interface PartyApi {
   state: PartyState;
   roomUrl: string | null;
+  myId: string | null;
+  call: ReturnType<typeof useWatchPartyCall>;
   createRoom: (videoId: string, ack?: (ok: boolean, roomId?: string) => void) => void;
   joinRoom: (roomId: string, ack?: (ok: boolean) => void) => void;
   leaveRoom: () => void;
@@ -119,6 +125,14 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
     // Re-run when the user first becomes available so a late sign-in retries.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Boolean(user)]);
+
+  const call = useWatchPartyCall({
+    socket,
+    myId: socket?.id ?? null,
+    roomId: state.roomId,
+    isHost: state.isHost,
+    members: state.members,
+  });
 
   const createRoom = useCallback(
     (videoId: string, ack?: (ok: boolean, roomId?: string) => void) => {
@@ -200,6 +214,7 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
 
   const leaveRoom = useCallback(() => {
     if (!socketRef.current) return;
+    call.leaveCall();
     socketRef.current.emit("room:leave", () => {});
     lastVideoRef.current = null;
     lastHostPos.current = null;
@@ -211,7 +226,7 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
       chat: [],
       error: null,
     });
-  }, [update]);
+  }, [call, update]);
 
   const setVideo = useCallback(
     (videoId: string) => {
@@ -271,6 +286,8 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
     const onHostChange = ({ hostId }: { hostId: string }) =>
       update({ isHost: hostId === socket.id });
     const onMediaToggle = ({ members }: { members: PartyMember[] }) => update({ members });
+    const onCallJoin = ({ members }: { members: PartyMember[] }) => update({ members });
+    const onCallLeave = ({ members }: { members: PartyMember[] }) => update({ members });
     const onChat = (msg: PartyChatMessage) =>
       setState((s) => ({ ...s, chat: [...s.chat, msg] }));
     const onToast = ({ message }: { message: string }) => toastMessage(message);
@@ -311,6 +328,8 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
     socket.on("member:left", onMemberLeft);
     socket.on("room:hostChange", onHostChange);
     socket.on("media:toggle", onMediaToggle);
+    socket.on("call:join", onCallJoin);
+    socket.on("call:leave", onCallLeave);
     socket.on("chat:message", onChat);
     socket.on("room:toast", onToast);
     socket.on("control:play", onControlPlay);
@@ -323,6 +342,8 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
       socket.off("member:left", onMemberLeft);
       socket.off("room:hostChange", onHostChange);
       socket.off("media:toggle", onMediaToggle);
+      socket.off("call:join", onCallJoin);
+      socket.off("call:leave", onCallLeave);
       socket.off("chat:message", onChat);
       socket.off("room:toast", onToast);
       socket.off("control:play", onControlPlay);
@@ -378,6 +399,8 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
   const api: PartyApi = {
     state,
     roomUrl,
+    myId: socket?.id ?? null,
+    call,
     createRoom,
     joinRoom,
     leaveRoom,
