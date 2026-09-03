@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Users, Video, Copy, Link2, LogOut, Loader2, MessageSquare, Send, PhoneCall, Mic, MicOff, VideoOff } from "lucide-react";
+import { Users, Video, Copy, Link2, LogOut, Loader2, MessageSquare, Send, PhoneCall, Mic, MicOff, VideoOff, Maximize2 } from "lucide-react";
+import { useRouter } from "next/router";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ export default function WatchPartyDialog({
 }: WatchPartyDialogProps) {
   const { user } = useUser();
   const party = useWatchParty();
+  const router = useRouter();
   const [joinCode, setJoinCode] = useState("");
   const [connectError, setConnectError] = useState<string | null>(null);
   const [chatText, setChatText] = useState("");
@@ -280,11 +282,25 @@ export default function WatchPartyDialog({
             )}
 
             {tab === "live" && (
-              <WatchPartyCall
-                call={party.call}
-                members={party.state.members}
-                myName={myName}
-              />
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={!party.state.roomId}
+                  onClick={() =>
+                    router.push(
+                      `/party?room=${party.state.roomId ?? ""}`
+                    )
+                  }
+                >
+                  <Maximize2 className="w-4 h-4" /> Open full-screen view
+                </Button>
+                <WatchPartyCall
+                  call={party.call}
+                  members={party.state.members}
+                  myName={myName}
+                />
+              </div>
             )}
 
             {tab === "chat" && (

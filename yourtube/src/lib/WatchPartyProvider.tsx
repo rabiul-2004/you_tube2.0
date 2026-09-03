@@ -262,6 +262,12 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
       if (typeof window === "undefined") return;
       const current = window.location.pathname;
       const target = `/watch/${data.videoId}?party=${data.roomId}`;
+      // On the immersive /party view we only update the room's video id so the
+      // "Back to watch" link stays correct; we don't redirect the party view.
+      if (current === "/party") {
+        update({ videoId: data.videoId });
+        return;
+      }
       if (current === `/watch/${data.videoId}`) return;
       // Reset local playback for the new video before navigating
       const p = getPlayer();

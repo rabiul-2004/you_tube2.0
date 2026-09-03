@@ -202,6 +202,9 @@ body {
     background-size: 200% 100%;
     animation: skeleton 1.5s ease-in-out infinite;
   }
+  .animate-slide-in-right {
+    animation: slide-right 0.22s ease-out;
+  }
   .stagger-1 { animation-delay: 0.05s; }
   .stagger-2 { animation-delay: 0.1s; }
   .stagger-3 { animation-delay: 0.15s; }

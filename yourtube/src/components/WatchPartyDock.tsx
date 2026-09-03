@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Users, PhoneOff } from "lucide-react";
+import { ChevronDown, ChevronUp, Users, PhoneOff, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WatchPartyVideoTile from "./WatchPartyVideoTile";
 import WatchPartyCallControls from "./WatchPartyCallControls";
 import { useWatchParty } from "@/lib/WatchPartyProvider";
 import { useUser } from "@/lib/AuthContext";
+import { useRouter } from "next/router";
 
 export default function WatchPartyDock({ onOpenDialog }: { onOpenDialog: () => void }) {
   const party = useWatchParty();
   const { user } = useUser();
+  const router = useRouter();
   const [expanded, setExpanded] = useState(true);
 
   if (!party.call.inCall || !party.state.roomId) return null;
@@ -34,6 +36,9 @@ export default function WatchPartyDock({ onOpenDialog }: { onOpenDialog: () => v
             <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
           </span>
           Live · {inCallCount} on call
+        </Button>
+        <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" onClick={() => router.push(`/party?room=${party.state.roomId ?? ""}`)} aria-label="Open full-screen view">
+          <Maximize2 className="w-4 h-4" />
         </Button>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onOpenDialog} aria-label="Open watch party">
           <Users className="w-4 h-4" />
