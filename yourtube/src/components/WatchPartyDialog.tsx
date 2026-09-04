@@ -299,6 +299,7 @@ export default function WatchPartyDialog({
                   call={party.call}
                   members={party.state.members}
                   myName={myName}
+                  isHost={party.state.isHost}
                 />
               </div>
             )}

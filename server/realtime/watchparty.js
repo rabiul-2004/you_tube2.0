@@ -15,6 +15,9 @@ import {
 } from "./rooms.js";
 
 const HEARTBEAT_MS = 3000;
+// How long the original host keeps the right to reclaim host control after a
+// disconnect (page refresh / brief network drop) before it's handed over.
+const HOST_RECLAIM_MS = 30000;
 
 export function setupSocket(io) {
   io.use(async (socket, next) => {
@@ -34,6 +37,7 @@ export function setupSocket(io) {
 
     const buildMember = (isHost) => ({
       socketId: socket.id,
+      uid: socket.auth?.uid || null,
       name: socket.auth.name || "Guest",
       image: socket.auth.picture || "",
       isHost,
@@ -45,20 +49,27 @@ export function setupSocket(io) {
     const leaveCurrentRoom = () => {
       const room = roomRef.current;
       if (!room) return;
+      const wasHost = isHost(room, socket.id);
+      const departingUid = socket.auth?.uid || null;
       removeMember(room, socket.id);
       socket.leave(room.id);
       io.to(room.id).emit("member:left", {
         socketId: socket.id,
         members: listMembers(room),
       });
-      if (isHost(room, socket.id)) {
+      if (wasHost) {
+        // Hold the departing host's slot so they can reclaim after a refresh /
+        // brief disconnect, then promote a temporary host for the meantime.
+        if (departingUid) {
+          room.reclaimHostUid = departingUid;
+          room.reclaimUntil = Date.now() + HOST_RECLAIM_MS;
+        }
         const remaining = listMembers(room);
         if (remaining.length > 0) {
-          setHost(room, remaining[0].socketId);
+          setHost(room, remaining[0].socketId, remaining[0].uid);
           io.to(room.id).emit("room:hostChange", { hostId: room.hostId });
-          const newHost = getMember(room, room.hostId);
           io.to(room.id).emit("room:toast", {
-            message: `${newHost?.name || "A participant"} is now the host`,
+            message: `${remaining[0]?.name || "A participant"} is hosting while the host reconnects`,
           });
         }
       }
@@ -77,6 +88,7 @@ export function setupSocket(io) {
         const room = createRoom({
           hostId: socket.id,
           videoId: String(videoId),
+          hostUid: socket.auth?.uid || null,
         });
         const member = buildMember(true);
         roomRef.current = room;
@@ -116,7 +128,28 @@ export function setupSocket(io) {
         }
         const member = buildMember(false);
         roomRef.current = room;
+        // If the rightful (original) host rejoins within the reclaim window,
+        // hand host control back to them (e.g. after they refreshed the page).
+        const rejoiningUid = socket.auth?.uid || null;
+        let reclaimed = false;
+        if (
+          rejoiningUid &&
+          room.reclaimHostUid === rejoiningUid &&
+          Date.now() < room.reclaimUntil
+        ) {
+          reclaimed = true;
+          room.reclaimHostUid = null;
+          room.reclaimUntil = 0;
+          member.isHost = true;
+        }
         addMember(room, socket.id, member);
+        if (reclaimed) {
+          setHost(room, socket.id, rejoiningUid);
+          io.to(room.id).emit("room:hostChange", { hostId: room.hostId });
+          io.to(room.id).emit("room:toast", {
+            message: `${member.name} is back and hosting again`,
+          });
+        }
         socket.join(room.id);
         io.to(room.id).emit("room:toast", {
           message: `${member.name} joined the watch party`,

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
 import { hasActivePaidPlan } from "@/lib/planUtils";
+import { useWatchProgress } from "@/lib/useWatchProgress";
 import { Lock, Video as VideoIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -54,6 +55,8 @@ const WatchPage = () => {
   const openPartyOnLoadRef = useRef(true);
   const playerRef = useRef<VideoPlayerHandle | null>(null);
   const party = useWatchParty();
+  const { savedPosition, setPosition: setProgressPosition, setVideoDuration } =
+    useWatchProgress(typeof id === "string" ? id : undefined, !party.state.roomId);
 
   // Tell the session-wide room which video the host is currently on.
   useEffect(() => {
@@ -75,6 +78,48 @@ const WatchPage = () => {
       router.replace(`/watch/${party.state.videoId}?party=${party.state.roomId}`);
     }
   }, [party.state.roomId, party.state.videoId, party.state.isHost, id, router]);
+
+  // Auto-resume at the last saved position once the player is ready
+  // (skip when joining a watch party so guests follow the host).
+  // Retries until the video metadata is loaded — seeking before metadata is
+  // ready gets clamped to 0 by the player.
+  useEffect(() => {
+    if (!savedPosition || savedPosition <= 3) return;
+    if (party.state.roomId) return;
+    let tries = 0;
+    const iv = setInterval(() => {
+      tries += 1;
+      const p = playerRef.current;
+      if (!p) {
+        if (tries >= 20) clearInterval(iv);
+        return;
+      }
+      if (p.getPosition() >= savedPosition - 1 && p.getPosition() > 0) {
+        clearInterval(iv);
+        return;
+      }
+      p.seekTo(savedPosition);
+      setProgressPosition(savedPosition);
+      if (tries >= 20) clearInterval(iv);
+    }, 300);
+    return () => clearInterval(iv);
+  }, [savedPosition, party.state.roomId, setProgressPosition]);
+
+  // Continuously feed the player's position into the progress hook so it can
+  // periodically save to the backend.
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const p = playerRef.current;
+      if (!p) return;
+      setProgressPosition(p.getPosition());
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [setProgressPosition]);
+
+  const videoDuration = videos?.duration as number | undefined;
+  useEffect(() => {
+    if (typeof videoDuration === "number") setVideoDuration(videoDuration);
+  }, [videoDuration, setVideoDuration]);
 
   const allVideos = video || [];
   const currentIndex = allVideos.findIndex((v: any) => v._id === id);
@@ -173,13 +218,15 @@ const WatchPage = () => {
                 </div>
               </div>
             ) : (
-              <Videopplayer
-                ref={playerRef}
-                video={videos}
-                nextVideo={nextVideo}
-                onNextVideo={handleNextVideo}
-                lockControls={isGuestLocked}
-              />
+              <div className="relative">
+                <Videopplayer
+                  ref={playerRef}
+                  video={videos}
+                  nextVideo={nextVideo}
+                  onNextVideo={handleNextVideo}
+                  lockControls={isGuestLocked}
+                />
+              </div>
             )}
             <div className="flex items-center gap-2">
               <Button

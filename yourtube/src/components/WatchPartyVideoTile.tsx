@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Maximize, Minimize } from "lucide-react";
+import { Maximize, Minimize, Mic, MicOff, Video, VideoOff, Crown } from "lucide-react";
 
 export default function WatchPartyVideoTile({
   stream,
@@ -9,12 +9,18 @@ export default function WatchPartyVideoTile({
   muted,
   mirrored,
   showFullscreen = true,
+  isHost = false,
+  micOn,
+  camOn,
 }: {
   stream: MediaStream | undefined | null;
   name: string;
   muted: boolean;
   mirrored?: boolean;
   showFullscreen?: boolean;
+  isHost?: boolean;
+  micOn?: boolean;
+  camOn?: boolean;
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -55,8 +61,28 @@ export default function WatchPartyVideoTile({
         muted={muted}
         className={`w-full h-full object-cover ${mirrored ? "-scale-x-100" : ""}`}
       />
-      <span className="absolute bottom-1 left-1.5 text-[10px] text-white/80 bg-black/50 px-1 py-0.5 rounded max-w-[80%] truncate">
-        {name}
+      <span className="absolute bottom-1 left-1.5 flex items-center gap-1 text-[10px] text-white/80 bg-black/50 px-1 py-0.5 rounded max-w-[80%] truncate">
+        {isHost && (
+          <span className="flex items-center gap-0.5 text-amber-400">
+            <Crown className="w-3 h-3" />
+            <span className="hidden sm:inline">Host</span>
+          </span>
+        )}
+        {typeof micOn === "boolean" ? (
+          micOn ? (
+            <Mic className="w-3 h-3 text-emerald-400" />
+          ) : (
+            <MicOff className="w-3 h-3 text-red-400" />
+          )
+        ) : null}
+        {typeof camOn === "boolean" ? (
+          camOn ? (
+            <Video className="w-3 h-3 text-emerald-400" />
+          ) : (
+            <VideoOff className="w-3 h-3 text-red-400" />
+          )
+        ) : null}
+        <span className="truncate">{name}</span>
       </span>
       {showFullscreen && (
         <button

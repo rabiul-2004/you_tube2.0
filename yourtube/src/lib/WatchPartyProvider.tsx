@@ -77,6 +77,9 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
   });
   const playerRefObj = useRef<React.RefObject<VideoPlayerHandle | null> | null>(null);
   const lastHostPos = useRef<{ pos: number; playing: boolean } | null>(null);
+  // Last known play position while a player existed — used to restore playback
+  // position when the /party view unmounts/remounts the video player.
+  const preservedPos = useRef<{ position: number; playing: boolean } | null>(null);
   const lastVideoRef = useRef<string | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -88,6 +91,29 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
 
   const registerPlayer = useCallback((ref: React.RefObject<VideoPlayerHandle | null> | null) => {
     playerRefObj.current = ref;
+    // When a player (re)mounts inside a live room — e.g. coming back from the
+    // immersive /party view — restore the last known play position instead of
+    // restarting the video from zero. Seeking before metadata is ready gets
+    // clamped to 0, so retry until the position sticks.
+    const restored = preservedPos.current;
+    const roomId = stateRef.current.roomId;
+    if (!ref?.current || !restored || !roomId) return;
+    let tries = 0;
+    const iv = setInterval(() => {
+      tries += 1;
+      const p = ref.current;
+      if (!p) {
+        if (tries >= 20) clearInterval(iv);
+        return;
+      }
+      if (p.getPosition() >= restored.position - 1 && p.getPosition() > 0) {
+        clearInterval(iv);
+        return;
+      }
+      p.seekTo(restored.position);
+      if (restored.playing) p.play();
+      if (tries >= 20) clearInterval(iv);
+    }, 300);
   }, []);
 
   // Socket connection (lazy, global singleton)
@@ -126,6 +152,18 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Boolean(user)]);
 
+  // After a full page refresh, rejoin the watch party the user was last in so
+  // the host (and members) don't lose the room or host control.
+  useEffect(() => {
+    if (!socket || state.roomId) return;
+    if (!user) return;
+    const session = readSession();
+    if (!session) return;
+    if (session.roomId === state.roomId) return;
+    joinRoom(session.roomId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, Boolean(user), state.roomId]);
+
   const call = useWatchPartyCall({
     socket,
     myId: socket?.id ?? null,
@@ -147,6 +185,11 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
             clearTimeout(timer);
             if (res?.ok) {
               lastVideoRef.current = res.videoId;
+              persistSession({
+                roomId: res.roomId,
+                videoId: res.videoId,
+                isHost: true,
+              });
               update({
                 connecting: false,
                 roomId: res.roomId,
@@ -178,6 +221,7 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
           const p = getPlayer();
           if (p) p.pause();
           const timer = setTimeout(() => {
+            clearSession();
             update({ connecting: false, error: "Timed out joining the room. Room may have expired." });
             ack?.(false);
           }, ACK_TIMEOUT_MS);
@@ -185,6 +229,17 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
             clearTimeout(timer);
             if (res?.ok) {
               lastVideoRef.current = res.videoId;
+              persistSession({
+                roomId: res.roomId,
+                videoId: res.videoId,
+                isHost: !!res.isHost,
+              });
+              // Keep the room's current position so the player can be restored
+              // once it mounts (important right after a page refresh).
+              preservedPos.current = {
+                position: res.state?.position ?? 0,
+                playing: false,
+              };
               update({
                 connecting: false,
                 roomId: res.roomId,
@@ -198,7 +253,16 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
                 joinerPlayer.seekTo(res.state?.position ?? 0);
               }
               ack?.(true);
+              // Make sure we're on the room's current video after rejoining.
+              if (typeof window !== "undefined") {
+                const current = window.location.pathname;
+                const target = `/watch/${res.videoId}?party=${res.roomId}`;
+                if (current.startsWith("/watch/") && current !== `/watch/${res.videoId}`) {
+                  router.replace(target);
+                }
+              }
             } else {
+              clearSession();
               update({ connecting: false, error: res?.error || "Failed to join room" });
               ack?.(false);
             }
@@ -218,6 +282,8 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
     socketRef.current.emit("room:leave", () => {});
     lastVideoRef.current = null;
     lastHostPos.current = null;
+    preservedPos.current = null;
+    clearSession();
     update({
       roomId: null,
       isHost: false,
@@ -234,6 +300,7 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
       if (!s || !state.roomId || !state.isHost) return;
       if (lastVideoRef.current === videoId) return;
       lastVideoRef.current = videoId;
+      preservedPos.current = null;
       s.emit("room:setVideo", { videoId }, (res: any) => {
         if (res?.ok) {
           update({ videoId: res.videoId });
@@ -265,11 +332,11 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
       // On the immersive /party view we only update the room's video id so the
       // "Back to watch" link stays correct; we don't redirect the party view.
       if (current === "/party") {
-        update({ videoId: data.videoId });
         return;
       }
       if (current === `/watch/${data.videoId}`) return;
       // Reset local playback for the new video before navigating
+      preservedPos.current = null;
       const p = getPlayer();
       if (p) {
         p.pause();
@@ -289,8 +356,11 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
     if (!socket) return;
     const onMemberJoined = ({ members }: { members: PartyMember[] }) => update({ members });
     const onMemberLeft = ({ members }: { members: PartyMember[] }) => update({ members });
-    const onHostChange = ({ hostId }: { hostId: string }) =>
+    const onHostChange = ({ hostId }: { hostId: string }) => {
       update({ isHost: hostId === socket.id });
+      const s = readSession();
+      if (s) persistSession({ ...s, isHost: hostId === socket.id });
+    };
     const onMediaToggle = ({ members }: { members: PartyMember[] }) => update({ members });
     const onCallJoin = ({ members }: { members: PartyMember[] }) => update({ members });
     const onCallLeave = ({ members }: { members: PartyMember[] }) => update({ members });
@@ -397,6 +467,19 @@ export function WatchPartyProvider({ children }: { children: React.ReactNode }) 
     return () => clearInterval(iv);
   }, [socket, state.roomId, state.isHost]);
 
+  // Preserve the latest play position so returning from the /party view (which
+  // unmounts this player) resumes where we left off instead of restarting at 0.
+  useEffect(() => {
+    if (!state.roomId) return;
+    const iv = setInterval(() => {
+      const p = getPlayer();
+      if (p) {
+        preservedPos.current = { position: p.getPosition(), playing: p.isPlaying() };
+      }
+    }, 500);
+    return () => clearInterval(iv);
+  }, [state.roomId]);
+
   const roomUrl =
     state.roomId && state.videoId && typeof window !== "undefined"
       ? `${window.location.origin}/watch/${state.videoId}?party=${state.roomId}`
@@ -429,4 +512,38 @@ export function useWatchParty(): PartyApi {
 function toastMessage(message: string) {
   if (typeof window === "undefined") return;
   import("sonner").then(({ toast }) => toast(message));
+}
+
+// ---- Party session persistence (survives a full page refresh) ----
+const SESSION_KEY = "watchparty:session";
+
+function persistSession(data: { roomId: string; videoId: string; isHost: boolean }) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  } catch {
+    // storage unavailable — non-fatal
+  }
+}
+
+function clearSession() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(SESSION_KEY);
+  } catch {
+    // non-fatal
+  }
+}
+
+function readSession(): { roomId: string; videoId: string; isHost: boolean } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (data?.roomId && data?.videoId) return data;
+    return null;
+  } catch {
+    return null;
+  }
 }

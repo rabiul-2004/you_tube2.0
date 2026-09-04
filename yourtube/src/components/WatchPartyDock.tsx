@@ -64,7 +64,7 @@ export default function WatchPartyDock({ onOpenDialog }: { onOpenDialog: () => v
               </div>
             )}
           </div>
-          <WatchPartyCallControls call={party.call} showLeaveLabel={false} />
+          <WatchPartyCallControls call={party.call} showLeaveLabel={false} isHost={party.state.isHost} />
         </div>
       )}
     </div>

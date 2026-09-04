@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Peer, { MediaConnection } from "peerjs";
 import { getPeerUrl } from "./watchparty";
+import { CallRecorder } from "./callRecorder";
 import type { Socket } from "socket.io-client";
 import type { PartyMember } from "./WatchPartyProvider";
 
@@ -19,6 +20,11 @@ export interface WatchPartyCallApi {
   toggleMic: () => void;
   toggleCam: () => void;
   toggleShare: () => Promise<void>;
+  recording: boolean;
+  recordingURL: string | null;
+  recordingElapsed: number;
+  startRecording: () => void;
+  stopRecording: () => void;
 }
 
 function setTrackEnabled(
@@ -50,11 +56,19 @@ export function useWatchPartyCall(params: {
   const [sharing, setSharing] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
+  const [recording, setRecording] = useState(false);
+  const [recordingURL, setRecordingURL] = useState<string | null>(null);
 
   const peerRef = useRef<Peer | null>(null);
   const callsRef = useRef<Map<string, MediaConnection>>(new Map());
   const streamRef = useRef<MediaStream | null>(null);
   const shareRef = useRef<MediaStream | null>(null);
+  const recorderEngineRef = useRef<CallRecorder | null>(null);
+  const recordStartRef = useRef<number>(0);
+  const [recordingElapsed, setRecordingElapsed] = useState(0);
+  const elapsedTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recordingRef = useRef(false);
+  recordingRef.current = recording;
 
   const inCallRef = useRef(inCall);
   inCallRef.current = inCall;
@@ -105,6 +119,19 @@ export function useWatchPartyCall(params: {
       }
     }
     callsRef.current.clear();
+    if (recorderEngineRef.current) {
+      try {
+        recorderEngineRef.current.stop();
+      } catch {
+        // noop
+      }
+      recorderEngineRef.current = null;
+    }
+    if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current);
+    elapsedTimerRef.current = null;
+    setRecording(false);
+    setRecordingElapsed(0);
+    setRecordingURL(null);
     shareRef.current?.getTracks().forEach((t) => t.stop());
     shareRef.current = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -198,6 +225,65 @@ export function useWatchPartyCall(params: {
     }
   }, [myId, roomId, socket, stopAll, wireCall]);
 
+  const startRecording = useCallback(() => {
+    if (!params.isHost) return;
+    if (recorderEngineRef.current) return;
+    const localStream = streamRef.current;
+    if (!localStream) return;
+
+    const sources: { stream: MediaStream; name: string; muted?: boolean; mirrored?: boolean }[] = [];
+    const selfName = members.find((m) => m.socketId === myId)?.name || "You";
+    sources.push({ stream: localStream, name: selfName, mirrored: true });
+    for (const [id, stream] of Object.entries(remoteStreams)) {
+      const m = members.find((mm) => mm.socketId === id);
+      sources.push({ stream, name: m?.name || "Guest" });
+    }
+
+    const engine = new CallRecorder((blob) => {
+      setRecordingURL(URL.createObjectURL(blob));
+      if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current);
+      elapsedTimerRef.current = null;
+      setRecordingElapsed(0);
+      setRecording(false);
+      recorderEngineRef.current = null;
+    });
+    const ok = engine.start(sources);
+    if (!ok) return;
+    recorderEngineRef.current = engine;
+    recordStartRef.current = Date.now();
+    setRecording(true);
+    setRecordingElapsed(0);
+    if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current);
+    elapsedTimerRef.current = setInterval(() => {
+      setRecordingElapsed(Math.floor((Date.now() - recordStartRef.current) / 1000));
+    }, 1000);
+  }, [remoteStreams, members, myId]);
+
+  const stopRecording = useCallback(() => {
+    const engine = recorderEngineRef.current;
+    if (engine) {
+      engine.stop();
+      recorderEngineRef.current = null;
+    }
+  }, []);
+
+  // While recording, keep the mixed source list in sync as peers join/leave.
+  useEffect(() => {
+    const engine = recorderEngineRef.current;
+    if (!engine || !recordingRef.current) return;
+    const local = streamRef.current;
+    const sources: { stream: MediaStream; name: string; mirrored?: boolean }[] = [];
+    if (local) {
+      const selfName = members.find((m) => m.socketId === myId)?.name || "You";
+      sources.push({ stream: local, name: selfName, mirrored: true });
+    }
+    for (const [id, stream] of Object.entries(remoteStreams)) {
+      const m = members.find((mm) => mm.socketId === id);
+      sources.push({ stream, name: m?.name || "Guest" });
+    }
+    engine.updateSources(sources);
+  }, [recording, remoteStreams, members, myId]);
+
   const leaveCall = useCallback(() => {
     if (!inCallRef.current) return;
     socket?.emit("call:leave", () => {});
@@ -208,7 +294,6 @@ export function useWatchPartyCall(params: {
     setRemoteStreams({});
     setInCall(false);
   }, [socket, stopAll]);
-
   // Mesh reconciliation: add missing connections (deterministic initiator = lower id),
   // drop connections for members who left the call.
   useEffect(() => {
@@ -323,5 +408,10 @@ export function useWatchPartyCall(params: {
     toggleMic,
     toggleCam,
     toggleShare,
+    recording,
+    recordingURL,
+    recordingElapsed,
+    startRecording,
+    stopRecording,
   };
 }

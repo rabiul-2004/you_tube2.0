@@ -2,13 +2,12 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Home, Compass, Clock, ThumbsUp, PlaySquare, Clock4, Library, ChevronDown, Crown, Download } from "lucide-react";
+import { Home, Clock, ThumbsUp, PlaySquare, Clock4, Library, Crown, Download, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import WatchPartyJoinDialog from "./WatchPartyJoinDialog";
 
 const menuItems = [
   { icon: Home, label: "Home", href: "/" },
-  { icon: Compass, label: "Explore", href: "/" },
-  { icon: PlaySquare, label: "Shorts", href: "/" },
 ];
 
 const youItems = [
@@ -17,6 +16,7 @@ const youItems = [
   { icon: ThumbsUp, label: "Liked videos", href: "/liked" },
   { icon: Clock4, label: "Watch later", href: "/watch-later" },
   { icon: Download, label: "Downloads", href: "/downloads" },
+  { icon: PlaySquare, label: "Your videos", href: "/your-videos" },
 ];
 
 const Sidebar = ({
@@ -27,7 +27,7 @@ const Sidebar = ({
   onClose: () => void;
 }) => {
   const router = useRouter();
-  const [showMore, setShowMore] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
 
   const content = (
     <div className="h-full overflow-y-auto scrollbar-hide safe-area-bottom pb-8">
@@ -75,51 +75,27 @@ const Sidebar = ({
           <Crown className="w-5 h-5 flex-shrink-0 text-amber-500" />
           <span className="text-sm font-medium">Upgrade / Plans</span>
         </Link>
-        {showMore && (
-          <div className="animate-fade-up">
-            <Link
-              href="/your-videos"
-              onClick={onClose}
-              className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-accent touch-target"
-            >
-              <PlaySquare className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm">Your videos</span>
-            </Link>
-          </div>
-        )}
-        <button
-          onClick={() => setShowMore(!showMore)}
-          className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-accent w-full touch-target"
-        >
-          <ChevronDown
-            className={cn(
-              "w-5 h-5 flex-shrink-0 transition-transform duration-200",
-              showMore && "rotate-180"
-            )}
-          />
-          <span className="text-sm">{showMore ? "Show less" : "Show more"}</span>
-        </button>
       </div>
 
       <div className="border-t mx-2 my-2" />
 
       <div className="p-2">
         <div className="flex items-center gap-5 px-3 py-2.5 text-sm font-medium">
-          <span>Explore</span>
+          <span>Watch together</span>
         </div>
-        {["Trending", "Music", "Gaming", "News", "Sports", "Education"].map(
-          (item) => (
-            <Link
-              key={item}
-              href="/"
-              onClick={onClose}
-              className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-accent touch-target"
-            >
-              <span className="text-sm">{item}</span>
-            </Link>
-          )
-        )}
+        <button
+          onClick={() => {
+            setJoinOpen(true);
+            onClose();
+          }}
+          className="flex items-center gap-5 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-accent w-full touch-target"
+        >
+          <Users className="w-5 h-5 flex-shrink-0" />
+          <span className="text-sm">Join a watch party</span>
+        </button>
       </div>
+
+      <div className="border-t mx-2 my-2" />
 
       <div className="p-4 text-xs text-muted-foreground space-y-1">
         <p>About Press Copyright</p>
@@ -132,6 +108,7 @@ const Sidebar = ({
 
   return (
     <>
+      <WatchPartyJoinDialog open={joinOpen} onOpenChange={setJoinOpen} />
       {/* Desktop sidebar */}
       <aside
         className={cn(

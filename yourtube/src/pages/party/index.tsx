@@ -10,6 +10,7 @@ import WatchPartyCallControls from "@/components/WatchPartyCallControls";
 import PartyChatPanel from "@/components/PartyChatPanel";
 import { useWatchParty } from "@/lib/WatchPartyProvider";
 import { useUser } from "@/lib/AuthContext";
+import { formatDuration } from "@/lib/videoUtils";
 
 export default function PartyPage() {
   const party = useWatchParty();
@@ -61,11 +62,27 @@ export default function PartyPage() {
       {party.call.inCall ? (
         <div className="flex flex-col gap-3 flex-1 min-h-0">
           <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-fr gap-2 overflow-y-auto content-start">
-            <WatchPartyVideoTile stream={party.call.localStream} name={`${myName} (you)`} muted mirrored />
+            <WatchPartyVideoTile
+              stream={party.call.localStream}
+              name={`${myName} (you)`}
+              muted
+              mirrored
+              isHost={party.state.isHost}
+              micOn={party.call.micOn}
+              camOn={party.call.camOn}
+            />
             {remoteTiles.map(([id, stream]) => {
               const member = party.state.members.find((m) => m.socketId === id);
               return (
-                <WatchPartyVideoTile key={id} stream={stream} name={member?.name || "Guest"} muted={false} />
+                <WatchPartyVideoTile
+                  key={id}
+                  stream={stream}
+                  name={member?.name || "Guest"}
+                  muted={false}
+                  isHost={member?.isHost}
+                  micOn={member?.micOn}
+                  camOn={member?.camOn}
+                />
               );
             })}
             {remoteTiles.length === 0 && (
@@ -75,8 +92,20 @@ export default function PartyPage() {
             )}
           </div>
 
+          {party.call.recording && (
+            <div className="shrink-0 flex items-center justify-center">
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-red-500 bg-red-500/10 rounded-full px-3 py-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                </span>
+                REC {formatDuration(party.call.recordingElapsed) ?? "0:00"}
+              </span>
+            </div>
+          )}
+
           <div className="shrink-0 flex items-center justify-center gap-2">
-            <WatchPartyCallControls call={party.call} showLeaveLabel={false} />
+            <WatchPartyCallControls call={party.call} showLeaveLabel={false} isHost={party.state.isHost} />
             <Button
               variant={chatOpen ? "secondary" : "outline"}
               size="icon"

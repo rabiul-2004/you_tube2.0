@@ -5,6 +5,7 @@ import { getVideoUrl } from "@/lib/cloudinary";
 import { relativeTime } from "@/lib/videoUtils";
 import { useState, useRef, useEffect } from "react";
 import DurationBadge from "./ui/duration-badge";
+import WatchProgressBar from "./WatchProgressBar";
 
 export default function VideoCard({ video }: any) {
   const [loaded, setLoaded] = useState(false);
@@ -95,6 +96,7 @@ export default function VideoCard({ video }: any) {
             {!video?.thumbnail && (
               <DurationBadge seconds={duration} className="bottom-1.5 right-1.5" />
             )}
+            <WatchProgressBar videoId={video?._id} duration={video?.duration} />
           </div>
         <div className="flex gap-2 sm:gap-3 px-0.5 sm:px-1">
           <Avatar className="w-9 h-9 flex-shrink-0 mt-0.5 hidden sm:flex">

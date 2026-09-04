@@ -14,10 +14,12 @@ export default function WatchPartyCall({
   call,
   members,
   myName,
+  isHost = false,
 }: {
   call: WatchPartyCallApi;
   members: PartyMember[];
   myName: string;
+  isHost?: boolean;
 }) {
   const remoteTiles = Object.entries(call.remoteStreams);
 
@@ -42,11 +44,27 @@ export default function WatchPartyCall({
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-0.5">
-        <WatchPartyVideoTile stream={call.localStream} name={`${myName} (you)`} muted mirrored />
+        <WatchPartyVideoTile
+          stream={call.localStream}
+          name={`${myName} (you)`}
+          muted
+          mirrored
+          isHost={isHost}
+          micOn={call.micOn}
+          camOn={call.camOn}
+        />
         {remoteTiles.map(([id, stream]) => {
           const member = members.find((m) => m.socketId === id);
           return (
-            <WatchPartyVideoTile key={id} stream={stream} name={member?.name || "Guest"} muted={false} />
+            <WatchPartyVideoTile
+              key={id}
+              stream={stream}
+              name={member?.name || "Guest"}
+              muted={false}
+              isHost={member?.isHost}
+              micOn={member?.micOn}
+              camOn={member?.camOn}
+            />
           );
         })}
         {remoteTiles.length === 0 && (
@@ -56,7 +74,7 @@ export default function WatchPartyCall({
         )}
       </div>
 
-      <WatchPartyCallControls call={call} />
+      <WatchPartyCallControls call={call} isHost={isHost} />
     </div>
   );
 }

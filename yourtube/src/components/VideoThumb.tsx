@@ -2,15 +2,18 @@
 import { useState } from "react";
 import { getVideoUrl } from "@/lib/cloudinary";
 import DurationBadge from "./ui/duration-badge";
+import WatchProgressBar from "./WatchProgressBar";
 
 export default function VideoThumb({
   filepath,
   thumbnail,
   duration,
+  videoId,
 }: {
   filepath?: string;
   thumbnail?: string;
   duration?: number;
+  videoId?: string;
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -50,6 +53,7 @@ export default function VideoThumb({
         </div>
       )}
       <DurationBadge seconds={effectiveDuration} className="bottom-1 right-1" />
+      <WatchProgressBar videoId={videoId} duration={effectiveDuration} />
     </div>
   );
 }
