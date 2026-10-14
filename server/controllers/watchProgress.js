@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import watchProgress from "../Modals/watchProgress.js";
+import { serializeVideo } from "../helpers/videoSerialize.js";
 
 export const saveProgress = async (req, res) => {
   const { videoId } = req.params;
@@ -48,9 +49,14 @@ export const getAllProgress = async (req, res) => {
   try {
     const docs = await watchProgress
       .find({ user: req.user._id })
-      .populate("video", "videotitle filepath videochanel thumbnail duration")
+      .populate("video", "videotitle filepath videochanel thumbnail duration isPremium uploader")
       .sort({ updatedAt: -1 });
-    res.json(docs);
+    const serialized = docs.map((item) => {
+      const obj = item.toObject();
+      if (obj.video) obj.video = serializeVideo(obj.video, req.user);
+      return obj;
+    });
+    res.json(serialized);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Something went wrong" });

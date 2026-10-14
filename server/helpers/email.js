@@ -81,6 +81,34 @@ export const generateOTP = () => {
   return crypto.randomInt(100000, 999999).toString();
 };
 
+const OTP_SECRET = process.env.OTP_SECRET || "yourtube-otp-secret";
+
+// Store only a salted scrypt hash of the OTP, never the plaintext code.
+export const hashOtp = (otp) => {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto
+    .scryptSync(String(otp), salt + OTP_SECRET, 32)
+    .toString("hex");
+  return `${salt}:${hash}`;
+};
+
+export const verifyOtpHash = (otp, stored) => {
+  if (!stored || typeof stored !== "string" || !stored.includes(":")) {
+    return false;
+  }
+  const [salt, hash] = stored.split(":");
+  if (!salt || !hash) return false;
+  const expected = crypto.scryptSync(String(otp), salt + OTP_SECRET, 32);
+  let actual;
+  try {
+    actual = Buffer.from(hash, "hex");
+  } catch {
+    return false;
+  }
+  if (actual.length !== expected.length) return false;
+  return crypto.timingSafeEqual(actual, expected);
+};
+
 export const sendOtpEmail = async ({ to, name, otp, city, state }) => {
   if (!mailConfigured()) {
     throw new Error(

@@ -179,7 +179,7 @@ const PlansPage = () => {
                 isCurrentPlan(plan.name) && "ring-2 ring-red-600"
               )}
             >
-              {plan.highlighted && (
+              {plan.highlighted && !isCurrentPlan(plan.name) && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-medium px-3 py-1 rounded-full">
                   Most popular
                 </span>

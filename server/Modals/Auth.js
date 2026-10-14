@@ -21,6 +21,7 @@ const userschema = mongoose.Schema({
   otp: { type: String, default: null },
   otpExpiry: { type: Date, default: null },
   otpPurpose: { type: String, enum: [null, "login_verification"], default: null },
+  otpAttempts: { type: Number, default: 0 },
 });
 
 export default mongoose.model("user", userschema);

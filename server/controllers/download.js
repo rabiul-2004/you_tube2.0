@@ -1,13 +1,9 @@
 import mongoose from "mongoose";
 import download from "../Modals/download.js";
+import video from "../Modals/video.js";
 import { ensureOwnsUser } from "../middleware/auth.js";
-
-const DAILY_LIMITS = {
-  Free: 1,
-  Bronze: 3,
-  Silver: 7,
-  Gold: 15,
-};
+import { hasActivePaidPlan, getEffectivePlan, getDailyDownloadLimit } from "../helpers/plan.js";
+import { serializeVideo } from "../helpers/videoSerialize.js";
 
 export const recordDownload = async (req, res) => {
   const { videoId } = req.params;
@@ -16,8 +12,18 @@ export const recordDownload = async (req, res) => {
   }
 
   try {
-    const plan = req.user.plan || "Free";
-    const limit = DAILY_LIMITS[plan] || 1;
+    const target = await video.findById(videoId).select("isPremium");
+    if (!target) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+    if (target.isPremium && !hasActivePaidPlan(req.user)) {
+      return res
+        .status(403)
+        .json({ message: "Upgrade to a paid plan to download premium videos" });
+    }
+
+    const plan = getEffectivePlan(req.user);
+    const limit = getDailyDownloadLimit(req.user);
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
@@ -53,8 +59,8 @@ export const recordDownload = async (req, res) => {
 
 export const getDownloadStatus = async (req, res) => {
   try {
-    const plan = req.user.plan || "Free";
-    const limit = DAILY_LIMITS[plan] || 1;
+    const plan = getEffectivePlan(req.user);
+    const limit = getDailyDownloadLimit(req.user);
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
@@ -84,10 +90,17 @@ export const getDownloadHistory = async (req, res) => {
   try {
     const downloads = await download
       .find({ user: userId })
-      .populate("video", "videotitle filepath videochanel views duration")
+      .populate("video", "videotitle filepath videochanel views duration isPremium uploader")
       .sort({ createdAt: -1 });
 
-    res.json(downloads);
+    // A user who downloaded premium content while subscribed, then downgraded,
+    // must not keep a usable stream URL — hide it like everywhere else.
+    const serialized = downloads.map((item) => {
+      const obj = item.toObject();
+      if (obj.video) obj.video = serializeVideo(obj.video, req.user);
+      return obj;
+    });
+    res.json(serialized);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Something went wrong" });

@@ -87,3 +87,18 @@ export function pushChat(room, message) {
 export function getChat(room) {
   return room.chat;
 }
+
+// Safety-net reaper: drop rooms with no members and rooms older than maxAgeMs.
+// Called on an interval from watchparty.js so abandoned rooms can't accumulate.
+export function sweepRooms(maxAgeMs = 6 * 60 * 60 * 1000) {
+  const now = Date.now();
+  let removed = 0;
+  for (const [id, room] of rooms) {
+    const expired = now - room.createdAt > maxAgeMs;
+    if (isEmpty(room) || expired) {
+      rooms.delete(id);
+      removed += 1;
+    }
+  }
+  return removed;
+}

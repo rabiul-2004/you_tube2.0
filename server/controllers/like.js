@@ -3,6 +3,7 @@ import video from "../Modals/video.js";
 import like from "../Modals/like.js";
 import dislike from "../Modals/dislike.js";
 import { ensureOwnsUser } from "../middleware/auth.js";
+import { serializeVideo } from "../helpers/videoSerialize.js";
 
 export const handlelike = async (req, res) => {
   const { videoId } = req.params;
@@ -104,7 +105,13 @@ export const getallLikedVideo = async (req, res) => {
         model: "videofiles",
       })
       .exec();
-    return res.status(200).json(likevideo);
+    // Hide premium stream URLs from users who aren't entitled to them.
+    const serialized = likevideo.map((item) => {
+      const obj = item.toObject();
+      if (obj.videoid) obj.videoid = serializeVideo(obj.videoid, req.user);
+      return obj;
+    });
+    return res.status(200).json(serialized);
   } catch (error) {
     console.error(" error:", error);
     return res.status(500).json({ message: "Something went wrong" });

@@ -99,6 +99,28 @@ export const requireAuth = async (req, res, next) => {
   }
 };
 
+// Like requireAuth, but never rejects: if a valid token is supplied it attaches
+// req.user/req.auth, otherwise the request continues anonymously. Used by public
+// read endpoints that return extra data (e.g. premium stream URLs) to signed-in
+// users who are entitled to it.
+export const optionalAuth = async (req, res, next) => {
+  try {
+    const header = req.headers.authorization || "";
+    if (!header.startsWith("Bearer ")) return next();
+    const auth = await verifyIdToken(header.slice(7));
+    let user = await users.findOne({ firebaseUid: auth.uid });
+    if (!user) user = await users.findOne({ email: auth.email });
+    if (user) {
+      req.user = user;
+      req.auth = { ...auth, firebaseUid: user.firebaseUid };
+    }
+    next();
+  } catch {
+    // Invalid/expired token on a public route → treat as anonymous.
+    next();
+  }
+};
+
 export const requireVerified = (req, res, next) => {
   if (!req.auth?.email_verified) {
     return res.status(403).json({

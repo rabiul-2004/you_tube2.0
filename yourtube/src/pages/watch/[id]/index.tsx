@@ -128,7 +128,14 @@ const WatchPage = () => {
       ? allVideos[(currentIndex + 1) % allVideos.length]
       : null;
 
-  const isLocked = videos?.isPremium && !hasActivePaidPlan(user);
+  // Mirror the server's premium gate: an uploader always keeps access to their
+  // own video, and paid plans unlock everyone else's premium videos.
+  const isOwner = !!(
+    user &&
+    (videos as any)?.uploader &&
+    String((videos as any).uploader) === String((user as any)._id)
+  );
+  const isLocked = videos?.isPremium && !isOwner && !hasActivePaidPlan(user);
 
   useEffect(() => {
     if (!loading && !videos) return;

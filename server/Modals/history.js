@@ -12,6 +12,9 @@ const historyschema = mongoose.Schema(
       required: true,
     },
     likedon: { type: Date, default: Date.now },
+    // Last time this viewer's watch was counted toward the video's views.
+    // Used to throttle view inflation (one "view" per cooldown per user).
+    lastViewedAt: { type: Date, default: null },
   },
   {
     timestamps: true,

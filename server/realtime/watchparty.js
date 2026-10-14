@@ -12,6 +12,7 @@ import {
   deleteRoom,
   pushChat,
   getChat,
+  sweepRooms,
 } from "./rooms.js";
 
 const HEARTBEAT_MS = 3000;
@@ -20,6 +21,15 @@ const HEARTBEAT_MS = 3000;
 const HOST_RECLAIM_MS = 30000;
 
 export function setupSocket(io) {
+  // Reap abandoned rooms every 10 minutes. Without this, a client that joined a
+  // room and then switched/left without a clean disconnect would leave the room
+  // (and its members) in the in-memory Map forever.
+  const sweepTimer = setInterval(() => {
+    const removed = sweepRooms();
+    if (removed > 0) console.log(`[watchparty] swept ${removed} stale room(s)`);
+  }, 10 * 60 * 1000);
+  sweepTimer.unref?.();
+
   io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth?.token;
@@ -85,6 +95,9 @@ export function setupSocket(io) {
       try {
         const videoId = payload?.videoId;
         if (!videoId) return ack?.({ ok: false, error: "videoId required" });
+        // One active room per socket: leave any previous room first so it can be
+        // cleaned up instead of leaking in the rooms Map.
+        if (roomRef.current) leaveCurrentRoom();
         const room = createRoom({
           hostId: socket.id,
           videoId: String(videoId),
@@ -112,6 +125,11 @@ export function setupSocket(io) {
         const roomId = payload?.roomId;
         const room = roomId ? getRoom(roomId) : null;
         if (!room) return ack?.({ ok: false, error: "Room not found" });
+        // One active room per socket: leave a DIFFERENT previous room first.
+        // (Re-joining the same room stays on the idempotent path below.)
+        if (roomRef.current && roomRef.current.id !== room.id) {
+          leaveCurrentRoom();
+        }
         const existing = getMember(room, socket.id);
         if (existing) {
           // Already a member (e.g. followed the host to a new video) — idempotent re-join.

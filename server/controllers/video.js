@@ -5,11 +5,12 @@ import dislike from "../Modals/dislike.js";
 import comment from "../Modals/comment.js";
 import watchlater from "../Modals/watchlater.js";
 import history from "../Modals/history.js";
-import { generateVideoSignature, deleteFromCloudinary } from "../helpers/cloudinary.js";
+import { generateVideoSignature, deleteFromCloudinary, userFolder } from "../helpers/cloudinary.js";
+import { serializeVideo } from "../helpers/videoSerialize.js";
 
 export const getUploadSignature = async (req, res) => {
   try {
-    const sig = generateVideoSignature();
+    const sig = generateVideoSignature(req.user._id);
     return res.status(200).json(sig);
   } catch (error) {
     console.error("Signature error:", error);
@@ -18,7 +19,7 @@ export const getUploadSignature = async (req, res) => {
 };
 
 export const uploadvideo = async (req, res) => {
-  const { videotitle, videochanel, uploader, isPremium, filepath, filename, filetype, filesize, duration, description, thumbnail } = req.body;
+  const { videotitle, videochanel, uploader, isPremium, filepath, filename, filetype, filesize, duration, description, thumbnail } = req.body || {};
   if (!filepath || !filepath.startsWith("http")) {
     return res.status(400).json({ message: "Invalid video URL" });
   }
@@ -51,8 +52,8 @@ export const uploadvideo = async (req, res) => {
 
 export const getallvideo = async (req, res) => {
   try {
-    const files = await video.find();
-    return res.status(200).send(files);
+    const files = await video.find().sort({ createdAt: -1 }).lean();
+    return res.status(200).json(files.map((f) => serializeVideo(f, req.user)));
   } catch (error) {
     console.error(" error:", error);
     return res.status(500).json({ message: "Something went wrong" });
@@ -69,7 +70,7 @@ export const getvideobyid = async (req, res) => {
     if (!file) {
       return res.status(404).json({ message: "Video not found" });
     }
-    return res.status(200).json(file);
+    return res.status(200).json(serializeVideo(file, req.user));
   } catch (error) {
     console.error(" error:", error);
     return res.status(500).json({ message: "Something went wrong" });
@@ -84,8 +85,9 @@ export const getvideoByChannel = async (req, res) => {
   try {
     const files = await video
       .find({ uploader: channelId })
-      .sort({ createdAt: -1 });
-    return res.status(200).send(files);
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.status(200).json(files.map((f) => serializeVideo(f, req.user)));
   } catch (error) {
     console.error(" error:", error);
     return res.status(500).json({ message: "Something went wrong" });
@@ -127,7 +129,7 @@ export const updatevideo = async (req, res) => {
       { $set: updateFields },
       { new: true }
     );
-    if (oldThumbnail) await deleteFromCloudinary(oldThumbnail, "image");
+    if (oldThumbnail) await deleteFromCloudinary(oldThumbnail, "image", { prefix: userFolder(req.user._id) });
     return res.status(200).json(updatedfile);
   } catch (error) {
     console.error(" error:", error);
@@ -150,8 +152,9 @@ export const deletevideo = async (req, res) => {
         .status(403)
         .json({ message: "You can only delete your own videos" });
     }
-    await deleteFromCloudinary(file.filepath);
-    if (file.thumbnail) await deleteFromCloudinary(file.thumbnail, "image");
+    const ownerPrefix = userFolder(req.user._id);
+    await deleteFromCloudinary(file.filepath, "video", { prefix: ownerPrefix });
+    if (file.thumbnail) await deleteFromCloudinary(file.thumbnail, "image", { prefix: ownerPrefix });
     await video.findByIdAndDelete(id);
     await like.deleteMany({ videoid: id });
     await dislike.deleteMany({ videoid: id });

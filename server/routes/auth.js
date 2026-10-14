@@ -11,7 +11,7 @@ import { requireToken, requireAuth, requireVerified } from "../middleware/auth.j
 const routes = express.Router();
 
 routes.post("/login", requireToken, login);
-routes.post("/verify-otp", verifyOtp);
+routes.post("/verify-otp", requireToken, verifyOtp);
 routes.get("/theme/:userId", requireAuth, getTheme);
 routes.put("/theme/:userId", requireAuth, setTheme);
 routes.get("/:id", getuserbyid);

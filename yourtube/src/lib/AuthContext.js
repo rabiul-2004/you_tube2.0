@@ -65,6 +65,16 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  // Reset app state WITHOUT signing out of Firebase. Used when the backend is
+  // unreachable: a transient server/network error must not destroy the Firebase
+  // session (which would force the user to re-authenticate).
+  const clearAppSession = () => {
+    userRef.current = null;
+    setUser(null);
+    setOtpRequired(false);
+    setOtpUserId(null);
+  };
+
   const syncWithBackend = async (firebaseuser) => {
     const device = getDeviceFingerprint();
     const location = await getClientInfo();
@@ -193,12 +203,11 @@ export const UserProvider = ({ children }) => {
         try {
           await syncWithBackend(firebaseuser);
         } catch (error) {
-          if (pendingToast.current) {
-            toast.error("Sign-in failed — the server may be down. Please try again.");
-            pendingToast.current = null;
-          }
           console.error(error);
-          logout();
+          // Keep the Firebase session intact — the user stays signed in and the
+          // next successful request/reload will complete the sync.
+          clearAppSession();
+          toast.error("Couldn't reach the server. Please try again in a moment.");
         }
       } else {
         setUser(null);

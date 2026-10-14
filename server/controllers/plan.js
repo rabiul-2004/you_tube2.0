@@ -5,12 +5,7 @@ import users from "../Modals/Auth.js";
 import payment from "../Modals/payment.js";
 import { sendInvoiceEmail } from "../helpers/email.js";
 import { ensureOwnsUser } from "../middleware/auth.js";
-
-const PLANS = {
-  Bronze: { amount: 100, currency: "INR", durationDays: 30 },
-  Silver: { amount: 200, currency: "INR", durationDays: 30 },
-  Gold: { amount: 300, currency: "INR", durationDays: 30 },
-};
+import { PLANS, hasActivePaidPlan } from "../helpers/plan.js";
 
 let razorpay = null;
 const getRazorpay = () => {
@@ -26,17 +21,6 @@ const getRazorpay = () => {
     });
   }
   return razorpay;
-};
-
-export const hasActivePaidPlan = (user) => {
-  return (
-    user &&
-    user.plan &&
-    user.plan !== "Free" &&
-    user.planDetails &&
-    user.planDetails.expiresAt &&
-    new Date(user.planDetails.expiresAt) > new Date()
-  );
 };
 
 export const createOrder = async (req, res) => {
@@ -170,10 +154,13 @@ export const getPlanStatus = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    const active = hasActivePaidPlan(user);
     return res.status(200).json({
-      plan: user.plan,
+      // Report the plan the user is actually entitled to right now; an expired
+      // subscription leaves a stale `plan` string on the document.
+      plan: active ? user.plan : "Free",
       expiresAt: user.planDetails.expiresAt,
-      active: hasActivePaidPlan(user),
+      active,
     });
   } catch (error) {
     console.error("getPlanStatus error:", error);
